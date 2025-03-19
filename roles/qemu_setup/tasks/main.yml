@@ -21,11 +21,27 @@
     mode: '0644'
   when: not ubuntu_base_image.stat.exists
 
+- name: List all VMs
+  command: virsh list --all --name
+  register: all_vms
+  changed_when: false
+
+- name: Destroy VM {{ item.name }} if exists
+  command: virsh destroy {{ item.name }}
+  loop: "{{ qemu.vms }}"
+  when: item.name in all_vms.stdout_lines
+
+- name: Undefine VM {{ item.name }} if exists
+  command: virsh undefine {{ item.name }} --remove-all-storage
+  loop: "{{ qemu.vms }}"
+  when: item.name in all_vms.stdout_lines
+
 - name: Create VM disk image for {{ item.name }}
   become: true
   command: >
     qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ item.disk }}
   loop: "{{ qemu.vms }}"
+
 
 - name: Create cloud-init directory {{ item.name }}
   file:
