@@ -1,5 +1,5 @@
 - name: Deploy QEMU VMs and Setup GitHub Runners
-  hosts: localhost
+  hosts: all
   become: true
   vars_files:
     - vars.yml

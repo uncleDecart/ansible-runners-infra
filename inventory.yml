@@ -1,13 +1,8 @@
 all:
   hosts:
-    ubuntu-vm1:
-      ansible_host: "{{ lookup('env', 'VM1_IP') }}"
-    ubuntu-vm2:
-      ansible_host: "{{ lookup('env', 'VM2_IP') }}"
-    ubuntu-vm3:
-      ansible_host: "{{ lookup('env', 'VM3_IP') }}"
-    ubuntu-vm4:
-      ansible_host: "{{ lookup('env', 'VM4_IP') }}"
+    linguini:
+      ansible_user: "{{ lookup('env', 'LINGUINI_USER') }}"
+      ansible_host: "{{ lookup('env', 'LINGUINI_IP') }}"
+
   vars:
-    ansible_user: ubuntu
     ansible_ssh_private_key_file: "{{ lookup('env', 'SSH_KEY_PATH') }}"
