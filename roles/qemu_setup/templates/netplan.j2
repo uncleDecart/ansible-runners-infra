@@ -1,0 +1,18 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {{ interface }}:
+      dhcp4: no  # Disable DHCP on the physical interface
+  bridges:
+    br0:
+      interfaces: [{{ interface }}]
+      dhcp4: yes  # Enable DHCP on the bridge
+      dhcp6: no
+      parameters:
+        stp: false
+        forward-delay: 0
+      nameservers:
+        addresses:
+          - 8.8.8.8
+          - 8.8.4.4

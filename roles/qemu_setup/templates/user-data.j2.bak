@@ -1,0 +1,52 @@
+#cloud-config
+package_update: true
+packages:
+  - qemu-guest-agent
+ssh_pwauth: true
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+  - name: {{ vm_user }}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+  - name: pasha
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+  - name: pasha1
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    passwd: 'qwerty'
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+  - name: pasha2
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: false
+    ssh_authorized_keys:
+      - {{ ssh_public_key | quote }}
+chpasswd:
+  expire: false
+  list:
+    - {{ vm_user }}:{{ vm_password }}
+    - pasha2:test
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+
+final_message: "Custom cloud-init is done"

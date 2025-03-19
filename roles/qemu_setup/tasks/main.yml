@@ -1,0 +1,81 @@
+- name: Install required packages
+  apt:
+    name:
+      - qemu-kvm
+      - libvirt-daemon-system
+      - virt-manager
+      - bridge-utils
+    state: present
+
+- name: Check if base image exists
+  become: true
+  stat:
+    path: "/var/lib/libvirt/images/ubuntu-base.qcow2"
+  register: ubuntu_base_image
+
+- name: Download Ubuntu base image if not exist
+  become: true
+  get_url:
+    url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+    dest: "/var/lib/libvirt/images/ubuntu-base.qcow2"
+    mode: '0644'
+  when: not ubuntu_base_image.stat.exists
+
+- name: Create VM disk image for {{ item.name }}
+  become: true
+  command: >
+    qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ item.disk }}
+  loop: "{{ qemu.vms }}"
+
+- name: Create cloud-init directory {{ item.name }}
+  file:
+    path: "/var/lib/libvirt/images/{{ item.name }}/cloud-init"
+    state: directory
+    mode: '0755'
+  loop: "{{ qemu.vms }}"
+
+- name: Generate user-data file for each VM
+  template:
+    src: "user-data.j2"
+    dest: "/var/lib/libvirt/images/{{ item.name }}/cloud-init/user-data"
+    mode: '0644'
+  loop: "{{ qemu.vms }}"
+
+- name: Generate meta-data file for each VM
+  template:
+    src: "meta-data.j2"
+    dest: "/var/lib/libvirt/images/{{ item.name }}/cloud-init/meta-data"
+    mode: '0644'
+  loop: "{{ qemu.vms }}"
+  vars:
+    vm_name: "{{ item.name }}"
+
+- name: Create cloud-init ISO for each VM
+  command: >
+    genisoimage -output /var/lib/libvirt/images/{{ item.name }}/cloud-init.iso
+    -volid cidata
+    -joliet
+    -rock
+    /var/lib/libvirt/images/{{ item.name }}/cloud-init/user-data
+    /var/lib/libvirt/images/{{ item.name }}/cloud-init/meta-data
+  args:
+    creates: "/var/lib/libvirt/images/{{ item.name }}/cloud-init.iso"
+  loop: "{{ qemu.vms }}"
+
+- name: Create VM with cloud-init
+  shell: >
+    virt-install --name {{ item.name }}
+    --ram {{ item.ram }} --vcpus=4,cpuset={{ item.cpu }}
+    --disk path={{ item.disk }},format=qcow2
+    --os-variant=ubuntu22.04
+    --graphics none
+    --console pty,target_type=serial
+    --network network=default
+    --disk path=/var/lib/libvirt/images/{{ item.name }}/cloud-init.iso,device=cdrom
+    --import
+  loop: "{{ qemu.vms }}"
+
+- name: Wait for VMs to be ready
+  wait_for_connection:
+    timeout: 300
+  loop: "{{ qemu.vms }}"

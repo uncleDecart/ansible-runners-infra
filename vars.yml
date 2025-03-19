@@ -1,0 +1,3 @@
+interface: "eno4"  # Replace with the actual network interface
+ip_address: "192.168.1.100"
+gateway: "192.168.1.1"

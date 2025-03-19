@@ -1,0 +1,32 @@
+qemu:
+  vms:
+    - name: ubuntu-vm1
+      cpu: "0-3"
+      ram: 16384
+      disk: "/var/lib/libvirt/images/ubuntu-vm1.qcow2"
+    - name: ubuntu-vm2
+      cpu: "4-7"
+      ram: 16384
+      disk: "/var/lib/libvirt/images/ubuntu-vm2.qcow2"
+    - name: ubuntu-vm3
+      cpu: "8-11"
+      ram: 16384
+      disk: "/var/lib/libvirt/images/ubuntu-vm3.qcow2"
+    - name: ubuntu-vm4
+      cpu: "12-15"
+      ram: 16384
+      disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"
+
+github_runner:
+  repo: "{{ lookup('env', 'GH_REPO')}}"
+  token: "{{ lookup('env', 'GH_PAC')}}"
+
+runner_setup:
+  install_docker: true
+  install_qemu: true
+  optimise_nested_virtualisation: true
+
+vm_user: "runner"
+vm_password: "runner"
+vm_hashed: "$y$j9T$35jVPIEi3btMRIPV05Ww.1$n8pVt.6icBPzFdaj5GVOERyHoiLKfJY6dZXhWg8cYV5"
+ssh_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC4rFCxGuiYFrIGvr8Gt2a/DAhuncxymxT6gMbziBmbBYt4+GKlodoeIJPH6e3C1j/PoQNgMmZghiDR3YkFp3ZJqUrdQg0cCELilYJE3vLlQb3r5GajxprtgIAkS4QuMJ0ipjxqyd8AWKyoDz8TCYxY9wzP8TZ/WQVoLsXLxjh/t8y+TI6F2ot3M+FMieeZRDqVhDadxBQs5G4pMeDpzlcji5BUAcVIwR1oTjBOZT6AWuNCYRNBEHBismDgKq0YRcogvfvPCqeIVUkgHh9CHxgMcFihSpVQMaEU8xGXXnxxEbvAPOCtXYNwTAFIcWTXGZQnO5DaplHfDMFdpR/OILjnzptc3mzlMmGK48CQtrjsv4H1ab5kkupsWjz1Y67xEHbNixqHodbpakg9YCY3cwafuNT1dc4nJe6/jtpN6Vez5a5JhinhIkxxBpvOkJUfLifCwzeL6PkdWQsZHgWu5gstgDjR76f7XKTK/fw92JuueobCurfccrwyFyL/telB1oLRjA4gGyLXP1CxxOFrFrn1ygwMiUoLOmPjc+LpEbKHodgAiwrEMS62tqEO1TI45OM1XzKx34Wh+C/kJzWBeyaNgJjE5uPf+v8y9lD5alz8RxeU7epUoYFQrWqYb//EvMzZ7h2VbHNVJR6Gqlr6n6Z88G3sxGz3bzv+myOTXig54Q== pavel@zededa.com"
