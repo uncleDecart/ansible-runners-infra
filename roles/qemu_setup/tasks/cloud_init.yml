@@ -1,0 +1,48 @@
+- name: Ensure Python is installed
+  ansible.builtin.apt:
+    name: python3
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create directory for cloud-init files
+  ansible.builtin.file:
+    path: "{{ qemu.cloud_init_server_dir }}/{{ item.name }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ qemu.vms }}"
+
+- name: Copy cloud-init user-data for each VM
+  ansible.builtin.copy:
+    src: "cloud-init/user-data"
+    dest: "{{ qemu.cloud_init_server_dir }}/{{item.name}}/user-data"
+    mode: '0644'
+  loop: "{{ qemu.vms }}"
+
+- name: Create empty vendor-data file for each VM to speed-up cloud-init
+  ansible.builtin.file:
+    path: "{{ qemu.cloud_init_server_dir }}/{{item.name}}/vendor-data"
+    state: touch
+    mode: '0644'
+  loop: "{{ qemu.vms }}"
+
+- name: Generate meta-data for each VM
+  ansible.builtin.template:
+    src: "cloud-init/meta-data.j2"
+    dest: "{{ qemu.cloud_init_server_dir }}/{{item.name}}/meta-data"
+    mode: '0644'
+  loop: "{{ qemu.vms }}"
+
+- name: Start Python HTTP server
+  ansible.builtin.shell: |
+    nohup python3 -m http.server {{ qemu.cloud_init_server_port }} --directory {{ qemu.cloud_init_server_dir }} &> /dev/null &
+  args:
+    executable: /bin/bash
+
+- name: Verify the server is running
+  ansible.builtin.command: pgrep -f "python3 -m http.server {{ qemu.cloud_init_server_port }}"
+  register: server_status
+  ignore_errors: true
+
+- name: Print server status
+  ansible.builtin.debug:
+    msg: "Python HTTP server is running with PID {{ server_status.stdout }}"    

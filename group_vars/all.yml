@@ -1,4 +1,6 @@
 qemu:
+  cloud_init_server_port: 8000
+  cloud_init_server_dir: /srv/cloud-init
   vms:
     - name: ubuntu-vm1
       cpu: "0-3"
@@ -15,7 +17,7 @@ qemu:
     - name: ubuntu-vm4
       cpu: "12-15"
       ram: 16384
-      disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"
+      disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"    
 
 github_runner:
   repo: "{{ lookup('env', 'GH_REPO')}}"
