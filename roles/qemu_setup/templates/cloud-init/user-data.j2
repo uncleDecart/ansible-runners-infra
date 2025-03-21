@@ -16,6 +16,8 @@ packages:
   - qemu-guest-agent
   - jq
   - build-essential
+  - qemu-utils
+  - qemu-system-x86
 
 runcmd:
   - apt update
@@ -23,3 +25,5 @@ runcmd:
   - apt install -y jq
   - sudo -u ubuntu -i -- bash /home/ubuntu/connect-runner.sh
   - chown ubuntu:ubuntu /home/ubuntu/
+  - usermod -aG kvm ubuntu
+
