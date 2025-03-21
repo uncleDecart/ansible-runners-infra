@@ -1,3 +1,12 @@
+- name: Copying SSH key
+  ansible.posix.authorized_key:
+    user: "{{ ansible_user }}"
+    state: present
+    key: "{{ lookup('file', ~/.ssh/id_ed25519.pub) }}"
+  with_fileglob:
+    - id_dsa.pub
+  become: true
+
 - name: Install required packages
   apt:
     name:
@@ -21,6 +30,11 @@
     mode: '0644'
   when: not ubuntu_base_image.stat.exists
 
+- name: Resize Ubuntu base image
+  become: true
+  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +38G
+  when: not ubuntu_base_image.stat.exists
+
 - name: List all VMs
   command: virsh list --all --name
   register: all_vms
@@ -30,11 +44,13 @@
   command: virsh destroy {{ item.name }}
   loop: "{{ qemu.vms }}"
   when: item.name in all_vms.stdout_lines
+  ignore_errors: true
 
 - name: Undefine VM {{ item.name }} if exists
   command: virsh undefine {{ item.name }} --remove-all-storage
   loop: "{{ qemu.vms }}"
   when: item.name in all_vms.stdout_lines
+  ignore_errors: true
 
 - name: Create VM disk image for {{ item.name }}
   become: true
@@ -54,7 +70,7 @@
     --graphics none
     --noautoconsole
     --boot hd
-    --network user
+    --network default
     --cloud-init user-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/meta-data"
     --import
   loop: "{{ qemu.vms }}"

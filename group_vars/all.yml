@@ -1,3 +1,10 @@
+remote_hosts:
+  linguini:
+    user: "{{ lookup('env', 'LINGUINI_USER') }}"
+    host: "{{ lookup('env', 'LINGUINI_IP') }}"
+
+ssh_key_path: "{{ lookup('env', 'SSH_KEY_PATH') }}"
+
 qemu:
   cloud_init_server_port: 8000
   cloud_init_server_dir: /srv/cloud-init
@@ -6,22 +13,31 @@ qemu:
       cpu: "0-3"
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm1.qcow2"
+      port_fwd: 2222
+      host: "192.168.1.100"
     - name: ubuntu-vm2
       cpu: "4-7"
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm2.qcow2"
+      port_fwd: 2223
+      host: "192.168.1.101"
     - name: ubuntu-vm3
       cpu: "8-11"
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm3.qcow2"
+      port_fwd: 2224
+      host: "192.168.1.102"
     - name: ubuntu-vm4
       cpu: "12-15"
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"    
+      port_fwd: 2225
+      host: "192.168.1.103"
 
 github_runner:
-  repo: "{{ lookup('env', 'GH_REPO')}}"
+  url: "{{ lookup('env', 'GH_REPO')}}"
   token: "{{ lookup('env', 'GH_PAC')}}"
+  version: "2.309.0"
 
 runner_setup:
   install_docker: true

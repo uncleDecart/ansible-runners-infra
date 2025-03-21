@@ -2,6 +2,14 @@
 password: password
 chpasswd:
   expire: False
+
+write_files:
+  - path: /home/ubuntu/connect-runner.sh
+    permissions: '0755'
+    encoding: b64
+    content: |
+      {{ encoded_script }}
 runcmd:
   - [ 'apt', 'update' ]
   - [ 'apt', 'install', '-y', 'qemu-guest-agent' ]
+

@@ -6,8 +6,3 @@
   roles:
     - qemu_setup
 
-- name: Configure GitHub Actions Runner
-  hosts: all
-  become: true
-  roles:
-    - github_runner
