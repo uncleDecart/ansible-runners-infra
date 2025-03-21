@@ -35,8 +35,8 @@ qemu:
       host: "192.168.1.103"
 
 github_runner:
-  url: "{{ lookup('env', 'GH_REPO')}}"
-  token: "{{ lookup('env', 'GH_PAC')}}"
+  url: "{{ lookup('env', 'GH_URL')}}"
+  token: "{{ lookup('env', 'GH_PAT')}}"
   version: "2.309.0"
 
 runner_setup:

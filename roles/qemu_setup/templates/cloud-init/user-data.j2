@@ -10,6 +10,8 @@ write_files:
     content: |
       {{ encoded_script }}
 runcmd:
-  - [ 'apt', 'update' ]
-  - [ 'apt', 'install', '-y', 'qemu-guest-agent' ]
-
+  - apt update
+  - apt install -y qemu-guest-agent
+  - apt install -y jq
+  - chmod a+x /home/ubuntu/connect-runner.sh
+  - sudo -u ubuntu -i -- /home/ubuntu/connect-runner.sh
