@@ -18,6 +18,14 @@ packages:
   - build-essential
   - qemu-utils
   - qemu-system-x86
+  - curl
+  - git
+  - make
+  - snapd
+
+snap:
+  commands:
+    - snap install go --classic
 
 runcmd:
   - apt update
@@ -26,4 +34,6 @@ runcmd:
   - sudo -u ubuntu -i -- bash /home/ubuntu/connect-runner.sh
   - chown ubuntu:ubuntu /home/ubuntu/
   - usermod -aG kvm ubuntu
+  - usermod -aG docker ubuntu
+  - newgrp docker
 

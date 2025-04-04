@@ -42,9 +42,11 @@ GH_TAC=%GITHUB-ACCESS-TOKEN%
  run export $(grep -v '^#' .env | xargs) && ansible-playbook -i inventory.yml playbook.yml
 ```
 
-### Security implications
+### Important information
 
-PAT token will be stored in VMs as well as on playbook was ran on (host system of inventory machines, in /tmp directory)
+- PAT token will be stored in VMs as well as on playbook it was ran on (host system of inventory machines, in /tmp directory)
+- When you run playbook it will delete _ALL_ previously created VMs on the host system
+- For each previously created VM on host system it will also delete runner with the same name for the given github url
 
 #### FAQ
 

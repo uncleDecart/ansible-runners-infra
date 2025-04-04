@@ -10,34 +10,31 @@ qemu:
   cloud_init_server_dir: /srv/cloud-init
   vms:
     - name: ubuntu-vm1
-      cpu: "0-3"
+      cpu: "0-7"
+      cpu_count: 8
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm1.qcow2"
-      port_fwd: 2222
-      host: "192.168.1.100"
     - name: ubuntu-vm2
-      cpu: "4-7"
+      cpu: "8-15"
+      cpu_count: 8
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm2.qcow2"
-      port_fwd: 2223
-      host: "192.168.1.101"
     - name: ubuntu-vm3
-      cpu: "8-11"
+      cpu: "16-23"
+      cpu_count: 8
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm3.qcow2"
-      port_fwd: 2224
-      host: "192.168.1.102"
     - name: ubuntu-vm4
-      cpu: "12-15"
+      cpu: "24-31"
+      cpu_count: 8
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"    
-      port_fwd: 2225
-      host: "192.168.1.103"
 
 github_runner:
   url: "{{ lookup('env', 'GH_URL')}}"
   token: "{{ lookup('env', 'GH_PAT')}}"
   version: "2.309.0"
+  user: ubuntu # WARN: change this if changing VM user
 
 runner_setup:
   install_docker: true

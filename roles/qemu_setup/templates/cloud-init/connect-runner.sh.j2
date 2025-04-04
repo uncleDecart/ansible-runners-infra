@@ -3,7 +3,8 @@
 set -e
 
 GITHUB_URL={{ github_runner.url }} 
-RUNNER_NAME="runner-$(hostname)"
+# WARN: RUNNER_NAME is used in playbook for cleaning up. Be aware when changing
+RUNNER_NAME="$(hostname)"
 RUNNER_VERSION={{ github_runner.version }}
 RUNNER_DIR="/opt/actions-runner"
 GITHUB_PAT={{ github_runner.token }}
@@ -27,7 +28,6 @@ install_docker() {
         sudo apt update
         sudo apt install -y docker.io
         sudo systemctl enable --now docker
-        sudo usermod -aG docker $USER
         echo "Docker installed successfully."
     else
         echo "Docker is already installed."

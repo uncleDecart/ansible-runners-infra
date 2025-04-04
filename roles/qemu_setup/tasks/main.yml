@@ -35,22 +35,8 @@
   command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +38G
   when: not ubuntu_base_image.stat.exists
 
-- name: List all VMs
-  command: virsh list --all --name
-  register: all_vms
-  changed_when: false
-
-- name: Destroy VM {{ item.name }} if exists
-  command: virsh destroy {{ item.name }}
-  loop: "{{ qemu.vms }}"
-  when: item.name in all_vms.stdout_lines
-  ignore_errors: true
-
-- name: Undefine VM {{ item.name }} if exists
-  command: virsh undefine {{ item.name }} --remove-all-storage
-  loop: "{{ qemu.vms }}"
-  when: item.name in all_vms.stdout_lines
-  ignore_errors: true
+- name: Clean up previous VMs
+  ansible.builtin.include_tasks: cleanup.yml  
 
 - name: Create VM disk image for {{ item.name }}
   become: true
@@ -64,7 +50,7 @@
 - name: Create VM with cloud-init
   shell: >
     virt-install --name {{ item.name }}
-    --ram {{ item.ram }} --vcpus=4,cpuset={{ item.cpu }}
+    --ram {{ item.ram }} --vcpus={{ item.cpu_count }},cpuset={{ item.cpu }}
     --disk path={{ item.disk }},format=qcow2
     --os-variant=ubuntu22.04
     --graphics none

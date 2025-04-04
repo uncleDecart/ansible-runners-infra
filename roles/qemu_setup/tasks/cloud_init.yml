@@ -5,7 +5,6 @@
     mode: '0755'
   loop: "{{ qemu.vms }}"
 
-
 - name: Generate meta-data for each VM
   ansible.builtin.template:
     src: "cloud-init/meta-data.j2"

@@ -1,0 +1,49 @@
+- name: List all VMs
+  command: virsh list --all --name
+  register: all_vms
+  changed_when: false
+
+- name: Extract GitHub owner and repo from github_url
+  set_fact:
+    github_owner: "{{ github_runner.url.split('/')[0] }}"
+    repo_name: "{{ github_runner.url.split('/')[1] if '/' in github_runner.url else '' }}"
+
+- name: Get list of GitHub runners
+  uri:
+    url: >-
+      https://api.github.com/{{ 'orgs/' + github_owner if repo_name == '' else 'repos/' + github_owner + '/' + repo_name }}/actions/runners
+    method: GET
+    headers:
+      Authorization: "token {{ github_runner.token }}"
+      Accept: "application/vnd.github.v3+json"
+    return_content: yes
+  register: runners_response
+
+- name: Extract runner IDs for all_vms
+  set_fact:
+    runner_ids: "{{ runners_response.json.runners | selectattr('name', 'in', all_vms.stdout_lines) | map(attribute='id') | list }}"
+
+- name: Remove GitHub runners
+  uri:
+    url: >-
+      https://api.github.com/{{ 'orgs/' + github_owner if repo_name == '' else 'repos/' + github_owner + '/' + repo_name }}/actions/runners/{{ item }}
+    method: DELETE
+    headers:
+      Authorization: "token {{ github_runner.token }}"
+      Accept: "application/vnd.github.v3+json"
+    status_code: 204 
+  loop: "{{ runner_ids }}"
+  when: runner_ids | length > 0
+
+- name: Destroy VM {{ item.name }} if exists
+  command: virsh destroy {{ item.name }}
+  loop: "{{ qemu.vms }}"
+  when: item.name in all_vms.stdout_lines
+  ignore_errors: true
+
+- name: Undefine VM {{ item.name }} if exists
+  command: virsh undefine {{ item.name }} --remove-all-storage
+  loop: "{{ qemu.vms }}"
+  when: item.name in all_vms.stdout_lines
+  ignore_errors: true
+
