@@ -22,6 +22,13 @@ enable_nested_virtualization() {
     fi
 }
 
+update_kernel() {
+    echo "[*] Updating kernel to 6.5.0-45-generic..."
+    sudo apt install linux-image-6.5.0-45-generic
+    echo "[*] Cleaning up current image..."
+    sudo apt remove linux-image-kvm
+}
+
 install_docker() {
     if ! command -v docker &> /dev/null; then
         echo "[*] Installing Docker..."
@@ -32,6 +39,12 @@ install_docker() {
     else
         echo "[*] Docker is already installed."
     fi
+}
+
+test_emulation() {
+    echo "[*] Testing that arch emulation works..."
+    docker run --rm -it --platform linux/arm64 alpine:3.21 uname -m
+    docker run --rm -it --platform linux/riscv64 alpine:3.21 uname -m
 }
 
 install_github_runner() {
@@ -91,8 +104,10 @@ start_runner_service() {
 }
 
 # Execute functions
+update_kernel
 enable_nested_virtualization
 install_docker
+test_emulation
 install_github_runner
 fetch_runner_token
 register_github_runner
