@@ -1,0 +1,29 @@
+- name: Match VMs with registered GitHub runners
+  ansible.builtin.include_role:
+    name: common_tasks
+    tasks_from: match_vms_with_github_runners
+
+- name: Remove GitHub runners
+  uri:
+    url: >-
+      https://api.github.com/{{ 'orgs/' + github_owner if repo_name == '' else 'repos/' + github_owner + '/' + repo_name }}/actions/runners/{{ item }}
+    method: DELETE
+    headers:
+      Authorization: "token {{ github_runner.token }}"
+      Accept: "application/vnd.github.v3+json"
+    status_code: 204 
+  loop: "{{ runner_ids }}"
+  when: runner_ids | length > 0
+
+- name: Destroy VM {{ item.name }} if exists
+  command: virsh destroy "{{ item.name }}"
+  loop: "{{ qemu.vms }}"
+  when: item.name in runner_names
+  ignore_errors: true
+
+- name: Undefine VM {{ item.name }} if exists
+  command: virsh undefine {{ item.name }} --remove-all-storage
+  loop: "{{ qemu.vms }}"
+  when: item.name in runner_names
+  ignore_errors: true
+

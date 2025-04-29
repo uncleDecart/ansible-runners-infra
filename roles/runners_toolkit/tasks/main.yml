@@ -1,0 +1,3 @@
+- name: Clean up previous VMs
+  ansible.builtin.include_tasks: cleanup.yml  
+

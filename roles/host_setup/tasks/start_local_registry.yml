@@ -1,0 +1,41 @@
+- name: Stop service if running (ignore errors if not running)
+  systemd:
+    name: "{{ local_registry.service_name }}"
+    state: stopped
+  ignore_errors: true
+
+- name: Remove old service file if exists
+  file:
+    path: "/etc/systemd/system/{{ local_registry.service_name }}.service"
+    state: absent
+
+- name: Create fresh systemd service file
+  copy:
+    dest: "/etc/systemd/system/{{ local_registry.service_name }}.service"
+    content: |
+      [Unit]
+      Description=Local Docker Registry Service
+      After=docker.service
+      Requires=docker.service
+
+      [Service]
+      Type=simple
+      ExecStart=/usr/bin/docker run -p {{ local_registry.addr }}:5000 --name localreg registry:2
+      ExecStop=/usr/bin/docker stop localreg
+      ExecStopPost=/usr/bin/docker rm localreg
+      Restart=always
+      User={{ ansible_user }}
+      Group={{ ansible_user }}
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Enable and start service
+  systemd:
+    name: "{{ local_registry.service_name }}"
+    enabled: true
+    state: started

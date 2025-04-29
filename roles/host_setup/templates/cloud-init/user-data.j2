@@ -9,19 +9,31 @@ write_files:
     encoding: b64
     content: |
       {{ encoded_script }}
+  - path: /etc/docker/daemon.json
+    owner: root:root
+    permissions: '0644'
+    content: |
+      {
+        "insecure-registries": {{ github_runner.docker_insecure_registries | to_json }}
+      }
 
 package_update: true
 package_upgrade: true
 packages:
-  - qemu-guest-agent
   - jq
   - build-essential
-  - qemu-utils
-  - qemu-system-x86
   - curl
   - git
   - make
   - snapd
+  - qemu-user-static
+  - binfmt-support
+  - qemu
+  - qemu-utils
+  - qemu-system-x86
+  - qemu-guest-agent
+  - qemu-system-aarch64
+  - qemu-system-misc
 
 snap:
   commands:

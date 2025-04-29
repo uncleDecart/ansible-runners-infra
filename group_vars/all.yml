@@ -30,11 +30,19 @@ qemu:
       ram: 16384
       disk: "/var/lib/libvirt/images/ubuntu-vm4.qcow2"    
 
+local_registry:
+  service_name: local-registry
+  addr: 10.208.13.132:5001 # WARN: should include port
+
 github_runner:
   url: "{{ lookup('env', 'GH_URL')}}"
   token: "{{ lookup('env', 'GH_PAT')}}"
   version: "2.309.0"
   user: ubuntu # WARN: change this if changing VM user
+  labels: [ buildjet-4vcpu-ubuntu-2204, ubuntu-22.04, ubuntu-latest ]
+  docker_insecure_registries:
+    - "localhost:5001"
+    - "{{ local_registry.addr }}"
 
 runner_setup:
   install_docker: true

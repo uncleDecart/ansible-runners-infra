@@ -1,56 +1,105 @@
-- name: Install Required Packages for QEMU & Virtualisation
+- name: Copy SSH private key to the remote host
+  copy:
+    src: id_rsa
+    dest: /home/{{ remote_hosts.linguini.user }}/.ssh/id_rsa
+    owner: "{{ remote_hosts.linguini.user }}"
+    group: "{{ remote_hosts.linguini.user }}"
+    mode: '0600'
+
+- name: Copy SSH public key to the remote host
+  copy:
+    src: id_rsa.pub
+    dest: /home/{{ remote_hosts.linguini.user }}/.ssh/id_rsa.pub
+    owner: "{{ remote_hosts.linguini.user }}"
+    group: "{{ remote_hosts.linguini.user }}"
+    mode: '0644'
+
+- name: Install required packages
   apt:
     name:
       - qemu-kvm
+      - qemu-user
+      - qemu-user-static
+      - binfmt-support
       - libvirt-daemon-system
       - virt-manager
       - bridge-utils
-      - cloud-utils
-      - genisoimage
-      - python3-libvirt
-      - python3-lxml
+      - apt-transport-https
+      - curl
+      - software-properties-common
     state: present
+    update_cache: yes
 
-- name: Install Docker
-  block:
-    - name: Install Docker packages
-      apt:
-        name:
-          - docker.io
-          - docker-compose
-        state: present
-    - name: Enable Docker service
-      systemd:
-        name: docker
-        enabled: yes
-        state: started
+- name: Install Docker Engine
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: latest
+    update_cache: yes
 
-- name: Add User to Libvirt and Docker Groups
+- name: Ensure Docker service is running and enabled
+  service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Add user(s) to docker group
   user:
-    name: "{{ ansible_user_id }}"
-    groups: libvirt,docker,kvm
+    name: "{{ ansible_user }}"
+    groups: docker
     append: yes
 
-- name: Enable Nested Virtualization on Host
-  lineinfile:
-    path: /etc/modprobe.d/kvm.conf
-    line: 'options kvm_intel nested=1'
-    create: yes
-  when: ansible_architecture == "x86_64"
+- name: Add local registry service
+  ansible.builtin.include_tasks: start_local_registry.yml  
 
-- name: Load KVM Module
-  shell: modprobe kvm_intel
-  when: ansible_architecture == "x86_64"
+- name: Check if base image exists
+  become: true
+  stat:
+    path: "/var/lib/libvirt/images/ubuntu-base.qcow2"
+  register: ubuntu_base_image
 
-- name: Verify Nested Virtualization is Enabled
-  shell: cat /sys/module/kvm_intel/parameters/nested
-  register: nested_vtx
+- name: Download Ubuntu base image if not exist
+  become: true
+  get_url:
+    url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+    dest: "/var/lib/libvirt/images/ubuntu-base.qcow2"
+    mode: '0644'
+  when: not ubuntu_base_image.stat.exists
 
-- name: Debug Nested Virtualization Status
-  debug:
-    msg: "Nested Virtualization Enabled: {{ nested_vtx.stdout }}"
+- name: Resize Ubuntu base image
+  become: true
+  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +38G
+  when: not ubuntu_base_image.stat.exists
 
-- name: Restart Host System (if necessary)
-  reboot:
-    reboot_timeout: 300
-  when: nested_vtx.stdout == 'N'
+- name: Clean up previous VMs
+  ansible.builtin.include_tasks: cleanup.yml  
+
+- name: Create VM disk image for {{ item.name }}
+  become: true
+  command: >
+    qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ item.disk }}
+  loop: "{{ qemu.vms }}"
+
+- name: Set up cloud-init server
+  ansible.builtin.include_tasks: cloud_init.yml
+
+- name: Create VM with cloud-init
+  shell: >
+    virt-install --name {{ item.name }}
+    --ram {{ item.ram }} --vcpus={{ item.cpu_count }},cpuset={{ item.cpu }}
+    --disk path={{ item.disk }},format=qcow2
+    --os-variant=ubuntu22.04
+    --graphics none
+    --noautoconsole
+    --boot hd
+    --network default
+    --cloud-init user-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/meta-data"
+    --import
+  loop: "{{ qemu.vms }}"
+
+- name: Wait for VMs to be ready
+  wait_for_connection:
+    timeout: 300
+  loop: "{{ qemu.vms }}"

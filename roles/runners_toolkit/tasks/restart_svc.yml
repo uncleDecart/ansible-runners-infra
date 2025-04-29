@@ -1,0 +1,48 @@
+# Sometimes runners can get problem connecting to
+# docker socket with permission denied. It's fixed
+# by restarting service running
+# sudo ./svc.sh stop && sudo ./svc.sh start
+# on each runner. For more info please refer to
+# https://github.com/actions/runner/issues/411
+# This task does exactly that on a given host.
+# Note: we assume that all hosts have same vms
+# declared in qemu.vms in group_vars/all.yml
+---
+- name: Match VMs with registered GitHub runners
+  ansible.builtin.include_role:
+    name: common_tasks
+    tasks_from: match_vms_with_github_runners
+    register: matched_runners
+    until: "qemu.vms | length == matched_runners.runner_info | length"
+    retries: 30
+    delay: 10
+
+- name: Connect to each runner and restart runner service
+  ansible.builtin.uri:
+    url: "{{ github_url }}"
+    method: GET
+    headers:
+      Authorization: "token {{ github_token }}"
+      Accept: "application/vnd.github.v3+json"
+  register: github_runners
+  until: >
+    github_runners.json.runners is defined and
+    (runner_name in github_runners.json.runners | map(attribute='name'))
+  retries: 30  # Check up to 30 times
+  delay: 10  # Wait 10 seconds between checks
+
+- name: Ensure VM is accessible via SSH
+  ansible.builtin.wait_for:
+    host: "{{ inventory_hostname }}"
+    port: 22
+    timeout: 300  # 5 minutes timeout
+  delegate_to: localhost
+
+- name: Run arbitrary command on the VM
+  ansible.builtin.shell: "{{ command_to_run }}"
+  register: command_output
+
+- name: Show command output
+  ansible.builtin.debug:
+    msg: "{{ command_output.stdout }}"
+

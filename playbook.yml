@@ -4,5 +4,5 @@
   vars_files:
     - vars.yml
   roles:
-    - qemu_setup
+    - host_setup
 
