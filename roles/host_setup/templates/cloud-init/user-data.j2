@@ -9,13 +9,6 @@ write_files:
     encoding: b64
     content: |
       {{ encoded_script }}
-  - path: /etc/docker/daemon.json
-    owner: root:root
-    permissions: '0644'
-    content: |
-      {
-        "insecure-registries": {{ github_runner.docker_insecure_registries | to_json }}
-      }
   - path: /usr/local/share/ca-certificates/localreg.crt
     ownder: root:rott
     permissions: '0644'
