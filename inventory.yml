@@ -17,9 +17,4 @@ all:
         ansible_ssh_common_args: "-p {{ qemu.vms[2].port_fwd}}"
       runner_4:
         ansible_host: "{{ remote_hosts.linguini.host }}"
-        ansible_ssh_common_args: "-p {{ qemu.vms[3].port_fwd}}"
-
-  vars:
-    ansible_ssh_private_key_file: "{{ ssh_key_path }}"
-
-    
+        ansible_ssh_common_args: "-p {{ qemu.vms[3].port_fwd}}"    

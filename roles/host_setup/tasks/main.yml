@@ -1,19 +1,3 @@
-- name: Copy SSH private key to the remote host
-  copy:
-    src: id_rsa
-    dest: /home/{{ remote_hosts.linguini.user }}/.ssh/id_rsa
-    owner: "{{ remote_hosts.linguini.user }}"
-    group: "{{ remote_hosts.linguini.user }}"
-    mode: '0600'
-
-- name: Copy SSH public key to the remote host
-  copy:
-    src: id_rsa.pub
-    dest: /home/{{ remote_hosts.linguini.user }}/.ssh/id_rsa.pub
-    owner: "{{ remote_hosts.linguini.user }}"
-    group: "{{ remote_hosts.linguini.user }}"
-    mode: '0644'
-
 - name: Install required packages
   apt:
     name:
