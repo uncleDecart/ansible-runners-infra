@@ -70,7 +70,7 @@
 
 - name: Resize Ubuntu base image
   become: true
-  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +38G
+  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +100G
   when: not ubuntu_base_image.stat.exists
 
 - name: Clean up previous VMs
@@ -97,6 +97,11 @@
     --network default
     --cloud-init user-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/meta-data"
     --import
+  loop: "{{ qemu.vms }}"
+
+- name: Set autostart for each VM
+  shell: >
+    virsh autostart {{ item.name }}
   loop: "{{ qemu.vms }}"
 
 - name: Wait for VMs to be ready

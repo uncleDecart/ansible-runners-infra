@@ -9,23 +9,52 @@
     path: "/etc/systemd/system/{{ local_registry.service_name }}.service"
     state: absent
 
+- name: Ensure that cert folder exists
+  file:
+    path: "{{ ansible_env.HOME }}/local-registry/certs"
+    state: directory
+    mode: '0755'
+
+- name: Copy domain.crt into the certs directory
+  copy:
+    src: files/domain.crt
+    dest: "{{ ansible_env.HOME }}/local-registry/certs"
+    mode: '0644'
+
+- name: Copy domain.key into the certs directory
+  copy:
+    src: files/domain.key
+    dest: "{{ ansible_env.HOME }}/local-registry/certs"
+    mode: '0644'
+
+- name: Ensure that images folder exists
+  file:
+    path: "{{ ansible_env.HOME }}/local-registry/registry-data"
+    state: directory
+    mode: '0755'
+
 - name: Create fresh systemd service file
   copy:
     dest: "/etc/systemd/system/{{ local_registry.service_name }}.service"
     content: |
       [Unit]
-      Description=Local Docker Registry Service
+      Description=Local Docker Registry
       After=docker.service
       Requires=docker.service
 
       [Service]
-      Type=simple
-      ExecStart=/usr/bin/docker run -p {{ local_registry.addr }}:5000 --name localreg registry:2
-      ExecStop=/usr/bin/docker stop localreg
-      ExecStopPost=/usr/bin/docker rm localreg
       Restart=always
-      User={{ ansible_user }}
-      Group={{ ansible_user }}
+      ExecStartPre=-/usr/bin/docker rm -f localreg
+      ExecStart=/usr/bin/docker run \
+        --name localreg \
+        -v {{ ansible_env.HOME }}/local-registry/registry-data:/var/lib/registry \
+        -v {{ ansible_env.HOME }}/local-registry/certs:/certs \
+        -e REGISTRY_HTTP_ADDR=0.0.0.0:443 \
+        -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt \
+        -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key \
+        -p 443:443 \
+        registry:2
+      ExecStop=/usr/bin/docker stop localreg
 
       [Install]
       WantedBy=multi-user.target

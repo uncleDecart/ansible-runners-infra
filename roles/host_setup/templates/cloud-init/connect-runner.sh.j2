@@ -24,9 +24,9 @@ enable_nested_virtualization() {
 
 update_kernel() {
     echo "[*] Updating kernel to 6.5.0-45-generic..."
-    sudo apt install linux-image-6.5.0-45-generic
+    sudo apt install -y linux-image-6.5.0-45-generic
     echo "[*] Cleaning up current image..."
-    sudo apt remove linux-image-kvm
+    sudo apt remove -y linux-image-kvm
 }
 
 install_docker() {
@@ -107,8 +107,8 @@ start_runner_service() {
 update_kernel
 enable_nested_virtualization
 install_docker
-test_emulation
 install_github_runner
 fetch_runner_token
 register_github_runner
 start_runner_service
+sudo reboot
