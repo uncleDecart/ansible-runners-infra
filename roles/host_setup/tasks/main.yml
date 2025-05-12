@@ -35,9 +35,6 @@
     groups: docker
     append: yes
 
-- name: Add local registry service
-  ansible.builtin.include_tasks: start_local_registry.yml  
-
 - name: Check if base image exists
   become: true
   stat:
@@ -47,14 +44,14 @@
 - name: Download Ubuntu base image if not exist
   become: true
   get_url:
-    url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+    url: "{{ vms.global.image_url }}"
     dest: "/var/lib/libvirt/images/ubuntu-base.qcow2"
     mode: '0644'
   when: not ubuntu_base_image.stat.exists
 
 - name: Resize Ubuntu base image
   become: true
-  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +100G
+  command: qemu-img resize /var/lib/libvirt/images/ubuntu-base.qcow2 +{{ vms.global.disk.size }}
   when: not ubuntu_base_image.stat.exists
 
 - name: Clean up previous VMs
@@ -63,32 +60,64 @@
 - name: Create VM disk image for {{ item.name }}
   become: true
   command: >
-    qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ item.disk }}
-  loop: "{{ qemu.vms }}"
+    qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ vms.global.disk.folder}}/{{ item.name }}
+  loop: "{{ vms.instances }}"
 
 - name: Set up cloud-init server
   ansible.builtin.include_tasks: cloud_init.yml
 
-- name: Create VM with cloud-init
+- name: Create VM with cloud-init for x84_64
   shell: >
     virt-install --name {{ item.name }}
     --ram {{ item.ram }} --vcpus={{ item.cpu_count }},cpuset={{ item.cpu }}
-    --disk path={{ item.disk }},format=qcow2
+    --disk path={{ vms.global.disk.folder}}/{{ item.name }},format=qcow2
     --os-variant=ubuntu22.04
     --graphics none
+    --cpu host-passthrough
     --noautoconsole
     --boot hd
     --network default
-    --cloud-init user-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{qemu.cloud_init_server_dir}}/{{ item.name }}/meta-data"
+    --cloud-init user-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/meta-data"
     --import
-  loop: "{{ qemu.vms }}"
+  loop: "{{ vms.instances }}"
+  when: not arm_runners
 
-- name: Set autostart for each VM
+- name: create varstore
+  become: true
+  command: >
+    truncate -s 64m /var/lib/libvirt/images/varstore.img
+  when: arm_runners
+
+- name: create efi
+  become: true
+  command: >
+    truncate -s 64m /var/lib/libvirt/images/efi.img
+  when: arm_runners
+
+- name: flush efi
+  become: true
+  command: >
+    dd if=/usr/share/qemu-efi-aarch64/QEMU_EFI.fd of=/var/lib/libvirt/images/efi.img conv=notrunc
+  when: arm_runners
+
+- name: Create VM with cloud-init for arm
   shell: >
-    virsh autostart {{ item.name }}
-  loop: "{{ qemu.vms }}"
+    virt-install --name {{ item.name }}
+    --ram {{ item.ram }}
+    --vcpus={{ item.cpu_count }}
+    --disk path={{ vms.global.disk.folder}}/{{ item.name }},format=qcow2,bus=virtio
+    --cpu host-passthrough
+    --graphics none
+    --arch aarch64
+    --noautoconsole
+    --boot hd
+    --machine virt
+    --os-variant ubuntu22.04
+    --boot uefi,loader=/var/lib/libvirt/images/efi.img,nvram=/var/lib/libvirt/images/varstore.img
+    --cloud-init user-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/meta-data"
+    --network default,model=virtio
+    --import
 
-- name: Wait for VMs to be ready
-  wait_for_connection:
-    timeout: 300
-  loop: "{{ qemu.vms }}"
+  loop: "{{ vms.instances }}"
+  when: arm_runners
+

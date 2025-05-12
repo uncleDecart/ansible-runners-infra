@@ -1,12 +1,12 @@
 - name: Stop service if running (ignore errors if not running)
   systemd:
-    name: "{{ local_registry.service_name }}"
+    name: "{{ service_name }}"
     state: stopped
   ignore_errors: true
 
 - name: Remove old service file if exists
   file:
-    path: "/etc/systemd/system/{{ local_registry.service_name }}.service"
+    path: "/etc/systemd/system/{{ service_name }}.service"
     state: absent
 
 - name: Ensure that cert folder exists
@@ -35,7 +35,7 @@
 
 - name: Create fresh systemd service file
   copy:
-    dest: "/etc/systemd/system/{{ local_registry.service_name }}.service"
+    dest: "/etc/systemd/system/{{ service_name }}.service"
     content: |
       [Unit]
       Description=Local Docker Registry

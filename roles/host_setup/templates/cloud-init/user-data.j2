@@ -1,4 +1,11 @@
 #cloud-config
+version: 2
+network:
+  version: 2
+  ethernets:
+    eth0:
+      dhcp4: true
+
 password: password
 chpasswd:
   expire: False
@@ -70,8 +77,5 @@ snap:
 
 runcmd:
   - chown ubuntu:ubuntu /home/ubuntu/
-  - usermod -aG kvm ubuntu
-  - usermod -aG docker ubuntu
-  - newgrp docker
   - update-ca-certificates
   - sudo -u ubuntu -i -- bash /home/ubuntu/connect-runner.sh

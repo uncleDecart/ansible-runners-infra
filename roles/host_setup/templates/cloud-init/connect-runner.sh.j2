@@ -2,12 +2,12 @@
 
 set -e
 
-GITHUB_URL={{ github_runner.url }} 
+GITHUB_URL={{ vms.global.github_runner.url }} 
 # WARN: RUNNER_NAME is used in playbook for cleaning up. Be aware when changing
 RUNNER_NAME="$(hostname)"
-RUNNER_VERSION={{ github_runner.version }}
+RUNNER_VERSION={{ vms.global.github_runner.version }}
 RUNNER_DIR="/opt/actions-runner"
-GITHUB_PAT={{ github_runner.token }}
+GITHUB_PAT={{ vms.global.github_runner.token }}
 
 enable_nested_virtualization() {
     if [[ "$(grep -E 'vmx|svm' /proc/cpuinfo)" ]]; then
@@ -16,10 +16,17 @@ enable_nested_virtualization() {
         echo "[*] Enabling nested virtualization..."
         echo "options kvm_intel nested=1" | sudo tee /etc/modprobe.d/kvm-intel.conf
         echo "options kvm_amd nested=1" | sudo tee /etc/modprobe.d/kvm-amd.conf
+
         sudo modprobe -r kvm_intel kvm_amd
         sudo modprobe kvm_intel kvm_amd
+
+
         echo "[*] Nested virtualization enabled."
     fi
+
+    sudo groupadd kvm || true
+    sudo usermod -aG kvm $USER
+    newgrp kvm || true
 }
 
 update_kernel() {
@@ -35,6 +42,11 @@ install_docker() {
         sudo apt update
         sudo apt install -y docker.io
         sudo systemctl enable --now docker
+
+        sudo groupadd docker || true
+        sudo usermod -aG docker $USER
+        newgrp docker
+
         echo "[*] Docker installed successfully."
     else
         echo "[*] Docker is already installed."
@@ -88,7 +100,7 @@ register_github_runner() {
             --runnergroup "default" \
             --work "_work" \
             --unattended \
-            --labels {{ github_runner.labels | join(',') }} \
+            --labels {{ vms.global.github_runner.labels | join(',') }} \
             --replace
         echo "[*] GitHub Actions Runner registered."
     else

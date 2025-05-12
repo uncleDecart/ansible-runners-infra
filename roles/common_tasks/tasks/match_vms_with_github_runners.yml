@@ -6,8 +6,8 @@
 
 - name: Extract GitHub owner and repo from github_url
   set_fact:
-    github_owner: "{{ github_runner.url.split('/')[0] }}"
-    repo_name: "{{ github_runner.url.split('/')[1] if '/' in github_runner.url else '' }}"
+    github_owner: "{{ vms.global.github_runner.url.split('/')[0] }}"
+    repo_name: "{{ vms.global.github_runner.url.split('/')[1] if '/' in vms.global.github_runner.url else '' }}"
 
 - name: Get list of GitHub runners
   uri:
@@ -15,7 +15,7 @@
       https://api.github.com/{{ 'orgs/' + github_owner if repo_name == '' else 'repos/' + github_owner + '/' + repo_name }}/actions/runners
     method: GET
     headers:
-      Authorization: "token {{ github_runner.token }}"
+      Authorization: "token {{ vms.global.github_runner.token }}"
       Accept: "application/vnd.github.v3+json"
     return_content: yes
   register: runners_response

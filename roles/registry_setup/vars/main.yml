@@ -1,0 +1,3 @@
+service_name: local-registry
+addr: 10.208.13.132:5001 # WARN: should include port
+

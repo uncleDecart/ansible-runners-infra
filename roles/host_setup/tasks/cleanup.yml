@@ -9,7 +9,7 @@
       https://api.github.com/{{ 'orgs/' + github_owner if repo_name == '' else 'repos/' + github_owner + '/' + repo_name }}/actions/runners/{{ item }}
     method: DELETE
     headers:
-      Authorization: "token {{ github_runner.token }}"
+      Authorization: "token {{ vms.global.github_runner.token }}"
       Accept: "application/vnd.github.v3+json"
     status_code: 204 
   loop: "{{ runner_ids }}"
@@ -17,13 +17,13 @@
 
 - name: Destroy VM {{ item.name }} if exists
   command: virsh destroy "{{ item.name }}"
-  loop: "{{ qemu.vms }}"
+  loop: "{{ vms.instances }}"
   when: item.name in runner_names
   ignore_errors: true
 
 - name: Undefine VM {{ item.name }} if exists
-  command: virsh undefine {{ item.name }} --remove-all-storage
-  loop: "{{ qemu.vms }}"
+  command: virsh undefine {{ item.name }} --nvram --remove-all-storage
+  loop: "{{ vms.instances }}"
   when: item.name in runner_names
   ignore_errors: true
 

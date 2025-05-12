@@ -1,20 +1,83 @@
 all:
   hosts:
-    linguini:
-      ansible_user: "{{ remote_hosts.linguini.user }}"
-      ansible_host: "{{ remote_hosts.linguini.host }}"
+    kratos:
+      ansible_user: "{{ lookup('env', 'KRATOS_USER') }}"
+      ansible_host: "{{ lookup('env', 'KRATOS_IP') }}"
 
-  runner_vms:
-    hosts:
-      runner_1:
-        ansible_host: "{{ remote_hosts.linguini.host }}"
-        ansible_ssh_common_args: "-p {{ qemu.vms[0].port_fwd}}"
-      runner_2:
-        ansible_host: "{{ remote_hosts.linguini.host }}"
-        ansible_ssh_common_args: "-p {{ qemu.vms[1].port_fwd}}"
-      runner_3:
-        ansible_host: "{{ remote_hosts.linguini.host }}"
-        ansible_ssh_common_args: "-p {{ qemu.vms[2].port_fwd}}"
-      runner_4:
-        ansible_host: "{{ remote_hosts.linguini.host }}"
-        ansible_ssh_common_args: "-p {{ qemu.vms[3].port_fwd}}"    
+      vms:
+        global: # Applied to each instance
+          disk:
+            size: 100G # additional resize apart from base image; qemu-img format
+            folder: "/var/lib/libvirt/images"
+
+          cloud_init_server_dir: /srv/cloud-init
+      
+          github_runner:
+            url: "{{ lookup('env', 'GH_URL')}}"
+            token: "{{ lookup('env', 'GH_PAT')}}"
+            version: "2.309.0"
+            user: ubuntu # WARN: change this if changing VM user
+            labels: [ ubuntu-latest ]
+
+          image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+
+        # Individual to each instance
+        instances: 
+          - name: kratos-runner-1
+            cpu: "0-7" # Ignored if CPU pinning is false
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-2
+            cpu: "8-15"
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-3
+            cpu: "16-23"
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-4
+            cpu: "24-31"
+            cpu_count: 8
+            ram: 16384
+
+    nanoforge:
+      ansible_user: "{{ lookup('env', 'NANOFORGE_USER') }}"
+      ansible_host: "{{ lookup('env', 'NANOFORGE_IP') }}"
+
+      vms:
+        global: # Applied to each instance
+          disk:
+            size: 60G # In GBs
+            folder: "/var/lib/libvirt/images/"
+
+          cloud_init_server_dir: /srv/cloud-init
+
+          github_runner:
+            url: "{{ lookup('env', 'GH_URL')}}"
+            token: "{{ lookup('env', 'GH_PAT')}}"
+            version: "2.309.0"
+            user: ubuntu # WARN: change this if changing VM user
+            labels: [ buildjet-4vcpu-ubuntu-arm-2204, ubuntu-arm-22.04, ubuntu-latest ]
+
+          image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"
+
+        # Individual to each instance
+        instances: 
+          - name: nanoforge-runner-vm1
+            cpu: "" # cpuset
+            cpu_count: 4
+            ram: 2048
+          - name: nanoforge-runner-vm2
+            cpu: ""
+            cpu_count: 4
+            ram: 2048
+          - name: nanoforge-runner-vm3
+            cpu: ""
+            cpu_count: 4
+            ram: 2048
+          - name: nanoforge-runner-vm4
+            cpu: ""
+            cpu_count: 4
+            ram: 2048
+
+
