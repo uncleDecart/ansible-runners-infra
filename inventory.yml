@@ -39,6 +39,22 @@ all:
             cpu: "24-31"
             cpu_count: 8
             ram: 16384
+          - name: kratos-runner-5
+            cpu: "32-39"
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-6
+            cpu: "40-47"
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-7
+            cpu: "48-55"
+            cpu_count: 8
+            ram: 16384
+          - name: kratos-runner-8
+            cpu: "56-63"
+            cpu_count: 8
+            ram: 16384
 
     nanoforge:
       ansible_user: "{{ lookup('env', 'NANOFORGE_USER') }}"

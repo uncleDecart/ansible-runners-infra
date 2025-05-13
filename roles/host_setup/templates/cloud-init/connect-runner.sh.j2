@@ -53,6 +53,13 @@ install_docker() {
     fi
 }
 
+install_swtpm() {
+    echo "[*] Adding swtpm repository..."
+    sudo add-apt-repository -y ppa:stefanberger/swtpm-jammy
+    sudo apt install -y swtpm
+    sudo aa-complain /usr/bin/swtpm
+}
+
 test_emulation() {
     echo "[*] Testing that arch emulation works..."
     docker run --rm -it --platform linux/arm64 alpine:3.21 uname -m
@@ -110,7 +117,7 @@ register_github_runner() {
 
 start_runner_service() {
     cd "$RUNNER_DIR"
-    sudo ./svc.sh install root
+    sudo ./svc.sh install ubuntu
     sudo ./svc.sh start
     echo "[*] GitHub Actions Runner is up and running!"
 }
@@ -119,6 +126,7 @@ start_runner_service() {
 update_kernel
 enable_nested_virtualization
 install_docker
+install_swtpm
 install_github_runner
 fetch_runner_token
 register_github_runner

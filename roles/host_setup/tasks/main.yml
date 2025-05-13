@@ -73,7 +73,7 @@
     --disk path={{ vms.global.disk.folder}}/{{ item.name }},format=qcow2
     --os-variant=ubuntu22.04
     --graphics none
-    --cpu host-passthrough
+    --cpu host-passthrough,+invtsc
     --noautoconsole
     --boot hd
     --network default
