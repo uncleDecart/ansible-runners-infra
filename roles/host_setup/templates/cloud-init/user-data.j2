@@ -15,7 +15,12 @@ write_files:
     permissions: '0755'
     encoding: b64
     content: |
-      {{ encoded_script }}
+      {{ runner_script }}
+  - path: /home/ubuntu/install-node-exporter.sh
+    permissions: '0755'
+    encoding: b64
+    content: |
+      {{ node_exporter_script }}
   - path: /usr/local/share/ca-certificates/localreg.crt
     ownder: root:rott
     permissions: '0644'
@@ -79,4 +84,5 @@ snap:
 runcmd:
   - chown ubuntu:ubuntu /home/ubuntu/
   - update-ca-certificates
+  - sudo -i -- bash /home/ubuntu/install-node-exporter.sh
   - sudo -u ubuntu -i -- bash /home/ubuntu/connect-runner.sh

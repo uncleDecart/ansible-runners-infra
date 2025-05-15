@@ -21,7 +21,18 @@
 - name: Base64 encode the script and format it
   shell: |
     base64 -w 0 "{{ vms.global.cloud_init_server_dir }}/connect-runner.sh"
-  register: encoded_script_output
+  register: encoded_runner_script_output
+
+- name: Generate install-node-exporter.sh from template
+  ansible.builtin.template:
+    src: "cloud-init/install-node-exporter.sh.j2"
+    dest: "{{ vms.global.cloud_init_server_dir }}/install-node-exporter.sh"
+    mode: '0644'
+
+- name: Base64 encode the script and format it
+  shell: |
+    base64 -w 0 "{{ vms.global.cloud_init_server_dir }}/install-node-exporter.sh"
+  register: encoded_node_script_output
 
 - name: Generate user-data for each VM
   ansible.builtin.template:
@@ -30,4 +41,5 @@
     mode: '0644'
   loop: "{{ vms.instances }}"
   vars:
-    encoded_script: "{{ encoded_script_output.stdout }}"
+    runner_script: "{{ encoded_runner_script_output.stdout }}"
+    node_exporter_script: "{{ encoded_node_script_output.stdout }}"

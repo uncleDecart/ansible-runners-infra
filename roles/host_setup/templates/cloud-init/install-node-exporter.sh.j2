@@ -1,0 +1,55 @@
+#!/bin/bash
+
+set -euo pipefail
+
+NODE_EXPORTER_VERSION="1.8.1"
+NODE_EXPORTER_USER="node_exporter"
+INSTALL_DIR="/usr/local/bin"
+SERVICE_FILE="/etc/systemd/system/node_exporter.service"
+
+# Create node_exporter user if it doesn't exist
+if ! id "$NODE_EXPORTER_USER" &>/dev/null; then
+    echo "Creating user $NODE_EXPORTER_USER..."
+    useradd --no-create-home --shell /usr/sbin/nologin "$NODE_EXPORTER_USER"
+fi
+
+# Download and install node_exporter
+if ! command -v node_exporter &>/dev/null; then
+    echo "Installing node_exporter..."
+    cd /tmp
+    wget "https://github.com/prometheus/node_exporter/releases/download/v${NODE_EXPORTER_VERSION}/node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz"
+    tar -xzf "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64.tar.gz"
+    cp "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64/node_exporter" "$INSTALL_DIR/"
+    chown "$NODE_EXPORTER_USER:$NODE_EXPORTER_USER" "$INSTALL_DIR/node_exporter"
+    rm -rf "node_exporter-${NODE_EXPORTER_VERSION}.linux-amd64"*
+else
+    echo "node_exporter already installed, skipping download."
+fi
+
+# Create systemd service
+echo "Creating systemd service for node_exporter..."
+cat <<EOF > "$SERVICE_FILE"
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=$NODE_EXPORTER_USER
+Group=$NODE_EXPORTER_USER
+Type=simple
+ExecStart=$INSTALL_DIR/node_exporter --web.listen-address=0.0.0.0:9100
+
+[Install]
+WantedBy=default.target
+EOF
+
+# Reload and enable service
+systemctl daemon-reexec
+systemctl daemon-reload
+systemctl enable node_exporter
+
+# Start or restart the service
+echo "Starting node_exporter..."
+systemctl restart node_exporter
+systemctl status node_exporter --no-pager

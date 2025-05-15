@@ -1,0 +1,11 @@
+- name: Start runners
+  shell: >
+    virsh start {{ item.name }}
+  loop: "{{ vms.instances }}"
+  ignore_errors: true
+
+- name: Setup host node_exporter
+  ansible.builtin.include_tasks: node_exporter.yml
+
+- name: Setup host prometheus
+  ansible.builtin.include_tasks: prometheus.yml

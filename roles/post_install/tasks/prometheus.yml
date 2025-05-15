@@ -1,0 +1,99 @@
+- name: Ensure Prometheus user exists
+  user:
+    name: prometheus
+    shell: /sbin/nologin
+
+- name: Ensure directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: '0755'
+  loop:
+    - "{{ prometheus_data_dir }}"
+    - /etc/prometheus
+    - "/opt/prometheus-{{ prometheus_version }}.linux-amd64"
+
+- name: Download Prometheus archive
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v{{ prometheus_version }}/prometheus-{{ prometheus_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/prometheus.tar.gz"
+    mode: '0644'
+    force: no
+
+- name: Extract Prometheus
+  unarchive:
+    src: /tmp/prometheus.tar.gz
+    dest: /opt/
+    remote_src: yes
+    creates: "/opt/prometheus-{{ prometheus_version }}.linux-amd64/prometheus"
+
+- name: Install Prometheus binaries
+  copy:
+    remote_src: yes
+    src: "/opt/prometheus-{{ prometheus_version }}.linux-amd64/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: '0755'
+  loop:
+    - prometheus
+    - promtool
+
+- name: Get list of active VMs
+  shell: virsh list --name
+  register: vm_names
+
+- name: Get IP addresses of VMs
+  shell: |
+    virsh domifaddr {{ item }} | awk '$1 ~ /^vnet[0-9]+$/ { split($4, a, "/"); print a[1] }'
+  loop: "{{ vm_names.stdout_lines }}"
+  register: vm_ips_results
+  changed_when: false
+  failed_when: false
+
+- name: Extract IPs into a flat list
+  set_fact:
+    vm_ips: "{{ vm_ips_results.results | map(attribute='stdout') | list }}"
+
+- name: Print variables
+  debug:
+    msg:
+      - "vm_ips: {{ vm_ips }}"
+
+- name: Deploy Prometheus config
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: '0644'
+
+- name: Create Prometheus systemd service
+  copy:
+    dest: /etc/systemd/system/prometheus.service
+    content: |
+      [Unit]
+      Description=Prometheus Monitoring
+      Wants=network-online.target
+      After=network-online.target
+
+      [Service]
+      User=prometheus
+      Group=prometheus
+      ExecStart=/usr/local/bin/prometheus \
+        --config.file={{ prometheus_config_file }} \
+        --storage.tsdb.path={{ prometheus_data_dir }} \
+        --web.console.templates=/opt/prometheus-{{ prometheus_version }}.linux-amd64/consoles \
+        --web.console.libraries=/opt/prometheus-{{ prometheus_version }}.linux-amd64/console_libraries \
+        --storage.tsdb.retention.time=30d
+
+      [Install]
+      WantedBy=multi-user.target
+    mode: '0644'
+
+- name: Reload systemd and restart Prometheus
+  systemd:
+    name: prometheus
+    daemon_reload: true
+    state: restarted
+    enabled: true

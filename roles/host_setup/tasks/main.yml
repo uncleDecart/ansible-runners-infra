@@ -63,7 +63,7 @@
     qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ vms.global.disk.folder}}/{{ item.name }}
   loop: "{{ vms.instances }}"
 
-- name: Set up cloud-init server
+- name: Set up cloud-init related data
   ansible.builtin.include_tasks: cloud_init.yml
 
 - name: Create VM with cloud-init for x84_64

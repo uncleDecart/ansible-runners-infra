@@ -1,0 +1,6 @@
+base_host_port: 9100
+guest_port: 9100
+
+prometheus_version: "2.51.1"
+prometheus_data_dir: "/var/lib/prometheus"
+prometheus_config_file: "/etc/prometheus/prometheus.yml"
