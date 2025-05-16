@@ -3,6 +3,8 @@
     path: "{{ vms.global.cloud_init_server_dir }}/{{ item.name }}"
     state: directory
     mode: '0755'
+    group: kvm
+    owner: libvirt-qemu
   loop: "{{ vms.instances }}"
 
 - name: Generate meta-data for each VM
@@ -43,3 +45,8 @@
   vars:
     runner_script: "{{ encoded_runner_script_output.stdout }}"
     node_exporter_script: "{{ encoded_node_script_output.stdout }}"
+
+- name: Generate ISO image for each VM
+  shell: |
+    genisoimage -output {{ vms.global.cloud_init_server_dir }}/{{ item.name }}-cinit.iso -volid cidata -joliet -rock {{ vms.global.cloud_init_server_dir }}/{{ item.name }}/user-data {{ vms.global.cloud_init_server_dir }}/{{ item.name }}/meta-data
+  loop: "{{ vms.instances }}"

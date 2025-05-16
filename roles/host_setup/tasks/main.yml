@@ -114,7 +114,7 @@
     --machine virt
     --os-variant ubuntu22.04
     --boot uefi,loader=/var/lib/libvirt/images/efi.img,nvram=/var/lib/libvirt/images/varstore.img
-    --cloud-init user-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/meta-data"
+    --disk path={{ vms.global.cloud_init_server_dir }}/{{ item.name }}-cinit.iso,device=cdrom,bus=sata \
     --network default,model=virtio
     --import
 

@@ -5,11 +5,22 @@ set -e
 GITHUB_URL={{ vms.global.github_runner.url }} 
 # WARN: RUNNER_NAME is used in playbook for cleaning up. Be aware when changing
 RUNNER_NAME="$(hostname)"
-RUNNER_VERSION={{ vms.global.github_runner.version }}
+RUNNER_URL={{ vms.global.github_runner.download_url }}
 RUNNER_DIR="/opt/actions-runner"
 GITHUB_PAT={{ vms.global.github_runner.token }}
 
 enable_nested_virtualization() {
+    sudo groupadd kvm || true
+    sudo usermod -aG kvm $USER
+    newgrp kvm || true
+
+    arch=$(uname -m)
+
+    if [[ "$arch" == "aarch64" || "$arch" == arm* ]]; then
+      echo "ARM architecture detected: $arch"
+      return 0  # If this is in a sourced script
+    fi
+
     if [[ "$(grep -E 'vmx|svm' /proc/cpuinfo)" ]]; then
         echo "Nested virtualization is already enabled."
     else
@@ -24,16 +35,13 @@ enable_nested_virtualization() {
         echo "[*] Nested virtualization enabled."
     fi
 
-    sudo groupadd kvm || true
-    sudo usermod -aG kvm $USER
-    newgrp kvm || true
 }
 
 update_kernel() {
     echo "[*] Updating kernel to 6.5.0-45-generic..."
     sudo apt install -y linux-image-6.5.0-45-generic
     echo "[*] Cleaning up current image..."
-    sudo apt remove -y linux-image-kvm
+    sudo apt remove -y linux-image-kvm || true
 }
 
 install_docker() {
@@ -72,9 +80,9 @@ install_github_runner() {
         sudo mkdir -p "$RUNNER_DIR"
         sudo chown $USER:$USER "$RUNNER_DIR"
         cd "$RUNNER_DIR"
-        curl -o actions-runner-linux-x64.tar.gz -L "https://github.com/actions/runner/releases/download/v$RUNNER_VERSION/actions-runner-linux-x64-$RUNNER_VERSION.tar.gz"
-        tar xzf actions-runner-linux-x64.tar.gz
-        rm actions-runner-linux-x64.tar.gz
+        curl -o actions-runner-linux.tar.gz -L $RUNNER_URL
+        tar xzf actions-runner-linux.tar.gz
+        rm actions-runner-linux.tar.gz
         echo "[*] GitHub Actions Runner installed."
     else
         echo "[*] GitHub Actions Runner is already installed."

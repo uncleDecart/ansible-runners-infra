@@ -22,7 +22,7 @@ write_files:
     content: |
       {{ node_exporter_script }}
   - path: /usr/local/share/ca-certificates/localreg.crt
-    ownder: root:rott
+    owner: root:root
     permissions: '0644'
     content: |
       -----BEGIN CERTIFICATE-----
@@ -69,6 +69,11 @@ packages:
   - snapd
   - apparmor-utils
   - binfmt-support
+  - net-tools
+  - procps
+  - tar
+  - dmidecode
+  - iptables
   - qemu
   - qemu-utils
   - qemu-system-x86
