@@ -1,0 +1,5 @@
+- name: Delete cloud-init related folders
+  ansible.builtin.file:
+    path: "{{ vms.global.cloud_init_server_dir }}/{{ item.name }}"
+    state: absent
+  loop: "{{ vms.instances }}"

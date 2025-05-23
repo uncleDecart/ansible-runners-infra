@@ -4,6 +4,9 @@
   loop: "{{ vms.instances }}"
   ignore_errors: true
 
+- name: Cleanup
+  ansible.builtin.include_tasks: cleanup.yml
+
 - name: Setup host node_exporter
   ansible.builtin.include_tasks: node_exporter.yml
 

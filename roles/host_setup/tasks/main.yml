@@ -11,6 +11,7 @@
       - apt-transport-https
       - curl
       - software-properties-common
+      - genisoimage
     state: present
     update_cache: yes
 

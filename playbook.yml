@@ -1,18 +1,18 @@
 - name: Deploy QEMU VMs and Setup GitHub Runners on x64
-  hosts: x64
+  hosts: kratos
   become: true
   vars:
     arm_runners: false
   roles:
     - host_setup
 
-- name: Deploy QEMU VMs and Setup GitHub Runners on arm
-  hosts: arm
-  become: true
-  vars:
-    arm_runners: true
-  roles:
-    - host_setup
+# - name: Deploy QEMU VMs and Setup GitHub Runners on arm
+#   hosts: arm
+#   become: true
+#   vars:
+#     arm_runners: true
+#   roles:
+#     - host_setup
 
 # - name: Deploy registry
 #   hosts: kratos
