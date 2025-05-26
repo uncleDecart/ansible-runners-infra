@@ -79,7 +79,7 @@
     --boot hd
     --network default
     --cloud-init user-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/user-data",meta-data="{{vms.global.cloud_init_server_dir}}/{{ item.name }}/meta-data"
-    --import
+    --import && virsh autostart {{ item.name }}
   loop: "{{ vms.instances }}"
   when: not arm_runners
 
@@ -117,7 +117,7 @@
     --boot uefi,loader=/var/lib/libvirt/images/efi.img,nvram=/var/lib/libvirt/images/varstore.img
     --disk path={{ vms.global.cloud_init_server_dir }}/{{ item.name }}-cinit.iso,device=cdrom,bus=sata \
     --network default,model=virtio
-    --import
+    --import && virsh autostart {{ item.name }}
 
   loop: "{{ vms.instances }}"
   when: arm_runners
