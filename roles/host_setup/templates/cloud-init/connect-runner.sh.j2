@@ -123,7 +123,7 @@ register_github_runner() {
         ./config.sh --url "https://github.com/$GITHUB_URL" \
             --token "$GITHUB_RUNNER_TOKEN" \
             --name "$RUNNER_NAME" \
-            --runnergroup "default" \
+            --runnergroup "Zededa Inc. - Self Hosted Runners" \
             --work "_work" \
             --unattended \
             --labels {{ vms.global.github_runner.labels | join(',') }} \
@@ -136,7 +136,7 @@ register_github_runner() {
 
 start_runner_service() {
     cd "$RUNNER_DIR"
-    sudo ./svc.sh install ubuntu
+    sudo ./svc.sh install "$USER"
     sudo ./svc.sh start
     echo "[*] GitHub Actions Runner is up and running!"
 }
@@ -150,4 +150,4 @@ install_github_runner
 fetch_runner_token
 register_github_runner
 start_runner_service
-sudo reboot
+sudo reboot -f
