@@ -25,7 +25,7 @@ all:
         # Individual to each instance
         instances: 
           - name: kratos-runner-1
-            cpu: "0-7" # Ignored if CPU pinning is false
+            cpu: "0-7" 
             cpu_count: 8
             ram: 32768
           - name: kratos-runner-2
@@ -69,6 +69,54 @@ all:
             cpu_count: 8
             ram: 32768
           - name: kratos-runner-12
+            cpu: "87-94"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-13
+            cpu: "0-7" 
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-14
+            cpu: "8-15"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-15
+            cpu: "16-23"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-16
+            cpu: "24-31"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-17
+            cpu: "32-39"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-18
+            cpu: "40-47"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-19
+            cpu: "48-55"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-20
+            cpu: "56-63"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-21
+            cpu: "64-71"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-22
+            cpu: "72-79"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-23
+            cpu: "80-87"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-24
             cpu: "87-94"
             cpu_count: 8
             ram: 32768
