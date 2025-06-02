@@ -73,38 +73,3 @@ all:
             cpu_count: 8
             ram: 16384
 
-    nanoforge:
-      ansible_user: "{{ lookup('env', 'NANOFORGE_USER') }}"
-      ansible_host: "{{ lookup('env', 'NANOFORGE_IP') }}"
-
-      vms:
-        global: # Applied to each instance
-          disk:
-            size: 60G # In GBs
-            folder: "/var/lib/libvirt/images/"
-
-          cloud_init_server_dir: /srv/cloud-init
-
-          github_runner:
-            url: "{{ lookup('env', 'GH_URL')}}"
-            token: "{{ lookup('env', 'GH_PAT')}}"
-            version: "2.309.0"
-            download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-arm64-2.323.0.tar.gz"
-            user: root # WARN: change this if changing VM user
-            labels: [ zededa-ubuntu-arm-2204, zededa-ubuntu-arm-latest ]
-            group: "Zededa Inc. - Self Hosted Runners"
-
-          image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"
-
-        # Individual to each instance
-        instances: 
-          - name: nanoforge-runner-vm1
-            cpu: "" # cpuset
-            cpu_count: 4
-            ram: 2048
-          - name: nanoforge-runner-vm2
-            cpu: ""
-            cpu_count: 4
-            ram: 2048
-
-
