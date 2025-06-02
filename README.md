@@ -64,8 +64,13 @@ specific elements of inventory. Inventory describes machines and holds device sp
                download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz"
                # WARN: change this if changing VM user
                user: ubuntu 
-               # Labelts which runner will be registered
+               # Labels which runner will be registered
                labels: [ ubuntu-latest ]
+               # --runnergroup parameter on GitHub runner
+               # for more info check this
+               # https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/managing-access-to-self-hosted-runners-using-groups#automatically-adding-a-self-hosted-runner-to-a-group
+               group: "default"
+
 
              # VM image for runners, should be cloud-init compatible
              image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"

@@ -18,6 +18,7 @@ all:
             download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz"
             user: root # WARN: change this if changing VM user
             labels: [ zededa-ubuntu-2204, zededa-ubuntu-latest ]
+            group: "Zededa Inc. - Self Hosted Runners"
 
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
 
@@ -91,6 +92,7 @@ all:
             download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-arm64-2.323.0.tar.gz"
             user: root # WARN: change this if changing VM user
             labels: [ zededa-ubuntu-arm-2204, zededa-ubuntu-arm-latest ]
+            group: "Zededa Inc. - Self Hosted Runners"
 
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"
 
