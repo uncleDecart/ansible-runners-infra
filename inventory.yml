@@ -27,49 +27,49 @@ all:
           - name: kratos-runner-1
             cpu: "0-7" # Ignored if CPU pinning is false
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-2
             cpu: "8-15"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-3
             cpu: "16-23"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-4
             cpu: "24-31"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-5
             cpu: "32-39"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-6
             cpu: "40-47"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-7
             cpu: "48-55"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-8
             cpu: "56-63"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-9
             cpu: "64-71"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-10
             cpu: "72-79"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-11
             cpu: "80-87"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-12
             cpu: "87-94"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
 
