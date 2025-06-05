@@ -40,6 +40,9 @@ specific elements of inventory. Inventory describes machines and holds device sp
          ansible_user: "{{ lookup('env', 'KRATOS_USER') }}"
          ansible_host: "{{ lookup('env', 'KRATOS_IP') }}"
 
+         # Set this to true if you want to delete previously created runners
+         force_cleanup: false
+
          vms:
            # Applied to host instance
            global: 

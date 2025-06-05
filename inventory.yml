@@ -3,6 +3,7 @@ all:
     kratos:
       ansible_user: "{{ lookup('env', 'KRATOS_USER') }}"
       ansible_host: "{{ lookup('env', 'KRATOS_IP') }}"
+      force_cleanup: false
 
       vms:
         global: # Applied to each instance
