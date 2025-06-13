@@ -11,7 +11,7 @@ all:
             folder: "/var/lib/libvirt/images"
 
           cloud_init_server_dir: /srv/cloud-init
-    
+
           github_runner:
             url: "{{ lookup('env', 'GH_URL')}}"
             token: "{{ lookup('env', 'GH_PAT')}}"
@@ -22,7 +22,7 @@ all:
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
 
         # Individual to each instance
-        instances: 
+        instances:
           - name: kratos-runner-1
             cpu: "0-7" # Ignored if CPU pinning is false
             cpu_count: 8
@@ -95,7 +95,7 @@ all:
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-arm64.img"
 
         # Individual to each instance
-        instances: 
+        instances:
           - name: nanoforge-runner-vm1
             cpu: "" # cpuset
             cpu_count: 4
