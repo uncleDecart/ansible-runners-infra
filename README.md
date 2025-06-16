@@ -1,4 +1,4 @@
-# Ansible playbook to deploy self-hosted GitHub runners 
+# Ansible playbook to deploy self-hosted GitHub runners
 
 ## What this repo is about?
 
@@ -16,7 +16,7 @@ git clone git@github.com:uncleDecart/ansible-runners-infra.git
 
 #### Install ansible
 
-See [this](https://docs.ansible.com/ansible/latest/installation_guide/index.html) doc for more information 
+See [this](https://docs.ansible.com/ansible/latest/installation_guide/index.html) doc for more information
 
 ### Install ansible.posix collection
 
@@ -27,7 +27,7 @@ ansible-galaxy collection install ansible.posix
 #### Define your .env file and inventory file
 
 Ansible main concepts are invenotry and recipes recepies hold a collection of actions which are applied to
-specific elements of inventory. Inventory describes machines and holds device specific configuration. 
+specific elements of inventory. Inventory describes machines and holds device specific configuration.
 
 ```yaml
     all:
@@ -45,17 +45,17 @@ specific elements of inventory. Inventory describes machines and holds device sp
 
          vms:
            # Applied to host instance
-           global: 
+           global:
              disk:
                # additional resize apart from base image; qemu-img format
-               size: 100G 
+               size: 100G
                # folder to store images; need to have same permissions
                folder: "/var/lib/libvirt/images"
 
              # folder where cloud init-related files will be stored
              # including iso image
              cloud_init_server_dir: /srv/cloud-init
-      
+
              # GitHub runner-related information
              github_runner:
                # %repo-owner or organisation%/%repository%
@@ -68,6 +68,7 @@ specific elements of inventory. Inventory describes machines and holds device sp
                # WARN: change this if changing VM user
                user: ubuntu 
                # Labels which runner will be registered
+
                labels: [ ubuntu-latest ]
                # --runnergroup parameter on GitHub runner
                # for more info check this
@@ -79,7 +80,7 @@ specific elements of inventory. Inventory describes machines and holds device sp
              image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
 
            # Individual virtual machine instances
-           instances: 
+           instances:
              # name of the runner, it will be registered
              # under this name and the name of virtual machine will
              # be the same. Should be unique across repositories
@@ -113,12 +114,12 @@ GH_TAC=%GITHUB-ACCESS-TOKEN%
 - For repositories in an organization: `write:actions`, `admin:org` (for organization-wide runners)
 
 Note that for ARM runners the deployment process is a bit different,
-so you need to separate them 
+so you need to separate them
 
 host_setup will download VMs, deploy them with cloud-init, install all needed
 components and register runner within your organisation/repository.
 
-#### Run playbook with invenotry file 
+#### Run playbook with invenotry file
 You can run it like this
 
 ```sh
