@@ -1,5 +1,5 @@
 - name: Deploy QEMU VMs and Setup GitHub Runners on x64
-  hosts: kratos
+  hosts: fusili
   become: true
   vars:
     arm_runners: false

@@ -122,3 +122,46 @@ all:
             cpu_count: 8
             ram: 32768
 
+
+    fusili:
+      ansible_user: pocuser
+      ansible_host: "{{ lookup('env', 'FUSILI_IP') }}"
+      force_cleanup: false
+
+      vms:
+        global: # Applied to each instance
+          disk:
+            size: 30G # additional resize apart from base image; qemu-img format
+            folder: "/var/lib/libvirt/images"
+
+          cloud_init_server_dir: /srv/cloud-init
+    
+          github_runner:
+            url: "{{ lookup('env', 'GH_URL')}}"
+            token: "{{ lookup('env', 'GH_PAT')}}"
+            download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz"
+            user: root # WARN: change this if changing VM user
+            labels: [ zededa-ubuntu-2204, zededa-ubuntu-latest ]
+            group: "default"
+
+          image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+
+        # Individual to each instance
+        instances: 
+          - name: fusilli-runner-1
+            cpu: "0-3" 
+            cpu_count: 4
+            ram: 16384
+          - name: fusilli-runner-2
+            cpu: "4-7"
+            cpu_count: 4
+            ram: 16384
+          - name: fusilli-runner-3
+            cpu: "8-11"
+            cpu_count: 4
+            ram: 16384
+          - name: fusilli-runner-4
+            cpu: "12-15"
+            cpu_count: 4
+            ram: 16384
+

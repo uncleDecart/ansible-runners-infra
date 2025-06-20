@@ -1,5 +1,5 @@
 - name: Run post-install operations
-  hosts: all
+  hosts: kratos
   become: true
   roles:
     - post_install

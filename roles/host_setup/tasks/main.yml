@@ -64,10 +64,22 @@
     name: common_tasks
     tasks_from: new_runners
 
-- name: Prune vm.instances to keep only new VMs
+- name: Show the full vms variable
+  debug:
+    var: new_runners
+
+- name: Filter instances and update vms
   set_fact:
-    vms:
-      instances: "{{ vms.instances | selectattr('name', 'in', new_runners) | list }}"
+    vms: >-
+      {{
+        vms | combine({
+          'instances': vms.instances | selectattr('name', 'in', new_runners) | list
+        })
+      }}
+
+- name: Show the full vms variable
+  debug:
+    var: vms
 
 - name: Create VM disk image for {{ item.name }}
   become: true

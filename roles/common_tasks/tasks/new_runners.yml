@@ -4,6 +4,10 @@
   register: all_vms
   changed_when: false
 
+- name: Extract and save VMs to be created
+  set_fact:
+    vms_to_be_created: "{{ vms.instances | map(attribute='name') | list }}"
+
 - name: Extract GitHub owner and repo from github_url
   set_fact:
     github_owner: "{{ vms.global.github_runner.url.split('/')[0] }}"
@@ -24,11 +28,14 @@
   set_fact:
     current_runner_names: "{{ runners_response.json.runners | map(attribute='name') | list }}"
 
+- name: Print current VMs
+  debug:
+    var: current_runner_names
+
 - name: Determine new VMs that are not registered as GitHub runners
   set_fact:
-    new_runners: "{{ all_vms.stdout_lines | difference(current_runner_names) }}"
+    new_runners: "{{ vms_to_be_created | difference(current_runner_names) }}"
 
 - name: Print new VMs
   debug:
-    msg: "New Runner: {{ item }}"
-  loop: "{{ new_runners }}"
+    var: new_runners
