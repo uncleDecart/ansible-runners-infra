@@ -57,6 +57,17 @@
 
 - name: Clean up previous VMs
   ansible.builtin.include_tasks: cleanup.yml  
+  when: force_cleanup
+
+- name: Determine new runners
+  ansible.builtin.include_role:
+    name: common_tasks
+    tasks_from: new_runners
+
+- name: Prune vm.instances to keep only new VMs
+  set_fact:
+    vms:
+      instances: "{{ vms.instances | selectattr('name', 'in', new_runners) | list }}"
 
 - name: Create VM disk image for {{ item.name }}
   become: true

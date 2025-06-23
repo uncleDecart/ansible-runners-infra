@@ -3,6 +3,7 @@ all:
     kratos:
       ansible_user: "{{ lookup('env', 'KRATOS_USER') }}"
       ansible_host: "{{ lookup('env', 'KRATOS_IP') }}"
+      force_cleanup: false
 
       vms:
         global: # Applied to each instance
@@ -16,60 +17,110 @@ all:
             url: "{{ lookup('env', 'GH_URL')}}"
             token: "{{ lookup('env', 'GH_PAT')}}"
             download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz"
-            user: ubuntu # WARN: change this if changing VM user
+            user: root # WARN: change this if changing VM user
             labels: [ zededa-ubuntu-2204, zededa-ubuntu-latest ]
+            group: "Zededa Inc. - Self Hosted Runners"
 
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
 
         # Individual to each instance
         instances:
           - name: kratos-runner-1
-            cpu: "0-7" # Ignored if CPU pinning is false
+            cpu: "0-7" 
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-2
             cpu: "8-15"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-3
             cpu: "16-23"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-4
             cpu: "24-31"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-5
             cpu: "32-39"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-6
             cpu: "40-47"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-7
             cpu: "48-55"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-8
             cpu: "56-63"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-9
             cpu: "64-71"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-10
             cpu: "72-79"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-11
             cpu: "80-87"
             cpu_count: 8
-            ram: 16384
+            ram: 32768
           - name: kratos-runner-12
             cpu: "87-94"
             cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-13
+            cpu: "0-7" 
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-14
+            cpu: "8-15"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-15
+            cpu: "16-23"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-16
+            cpu: "24-31"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-17
+            cpu: "32-39"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-18
+            cpu: "40-47"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-19
+            cpu: "48-55"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-20
+            cpu: "56-63"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-21
+            cpu: "64-71"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-22
+            cpu: "72-79"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-23
+            cpu: "80-87"
+            cpu_count: 8
+            ram: 32768
+          - name: kratos-runner-24
+            cpu: "87-94"
+            cpu_count: 8
+            ram: 32768
             ram: 16384
 
     nanoforge:
