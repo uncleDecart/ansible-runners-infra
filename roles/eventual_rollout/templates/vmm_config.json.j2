@@ -1,0 +1,5 @@
+{
+  "disk_folder": "{{ hostvars['vms']['global']['disk']['folder'] }}",
+  "cloud_init_dir": "{{ hostvars['vms']['global']['cloud_init_server_dir'] }}",
+  "instances": {{ hostvars['vms']['instances'] | to_json(pretty=True) }}
+}

@@ -1,0 +1,1 @@
+git+https://github.com/uncleDecart/PyGithub.git@011d03d9c8b57460e6da9fa4580ea08d0728472f

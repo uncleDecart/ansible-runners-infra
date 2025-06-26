@@ -121,7 +121,6 @@ all:
             cpu: "87-94"
             cpu_count: 8
             ram: 32768
-            ram: 16384
 
     nanoforge:
       ansible_user: "{{ lookup('env', 'NANOFORGE_USER') }}"
