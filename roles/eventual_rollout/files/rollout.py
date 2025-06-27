@@ -32,24 +32,27 @@
 # https://github.com/PyGithub/PyGithub package
 from github import Github, Auth
 from typing import Dict, Set
+from pathlib import Path
 import argparse
 import json
 import sys
+import ast
 
 from vmm import VirshVmManager, VmManager
 
 # Typing hint assumes runner name and its busy status
 def get_runners(ghc: Github, org_name: str) -> Dict[str, bool]:
     runners = ghc.get_organization(org_name).get_self_hosted_runners()
-    return {runner.name: runner.busy for runner in runners}
+    return {r.name: (r.busy, r.id) for r in runners}
 
 def rollout(ghc: Github, vms: Set[str], org_name: str, vmm: VmManager) -> str:
     # Deploy runners which are not registered
     runners = get_runners(ghc, org_name)
-    new_runners = [vm for vm in vms if vm not in runners]
+    new_runners = vms - set(runners.keys())
     if new_runners:
-        vmm.deploy(new_runners)
-        vms -= set(new_runners)
+        for r in new_runners:
+            vmm.deploy(r)
+            vms -= set(r)
 
     # Recycle idle VMs
     while vms:
@@ -60,9 +63,10 @@ def rollout(ghc: Github, vms: Set[str], org_name: str, vmm: VmManager) -> str:
                 print(f"WARN: runner is not registered to GitHub: {vm}")
                 vms.remove(vm)
                 break
-            elif not runners[vm]:  # If runner is not busy
+            elif not runners[vm][0]:  # If runner is not busy
+                print(f"Deleting {vm} : {runners[vm]}")
                 org = ghc.get_organization(org_name)
-                org.delete_self_hosted_runner(vm)
+                org.delete_self_hosted_runner(str(runners[vm][1]))
                 vmm.destroy(vm)
                 vmm.deploy(vm)
                 vms.remove(vm)
@@ -75,14 +79,15 @@ def main():
     parser.add_argument("--config", required=True, help="Path to VmManager config")
     parser.add_argument("--token", required=True, help="GitHub PAT token")
     parser.add_argument("--org", required=True, help="GitHub organization name")
+    parser.add_argument("--password", help="sudo password")
 
     args = parser.parse_args()
 
     try:
         auth = Auth.Token(args.token)
         client = Github(auth=auth)
-        vm_names = set(args.vms.split(","))
-        vmm = VirshVmManager(Path(args.cloud_init))  # Replace with your actual implementation
+        vm_names = set(s.strip() for s in args.vms.split(","))
+        vmm = VirshVmManager(args.password, Path(args.config))
 
         result = rollout(client, vm_names, args.org, vmm)
         print(json.dumps({"changed": True, "msg": result}))

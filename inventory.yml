@@ -21,6 +21,8 @@ all:
             labels: [ zededa-ubuntu-2204, zededa-ubuntu-latest ]
             group: "Zededa Inc. - Self Hosted Runners"
 
+            labels: []
+
           image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
 
         # Individual to each instance
@@ -121,6 +123,16 @@ all:
             cpu: "87-94"
             cpu_count: 8
             ram: 32768
+          - name: kratos-runner-25
+            cpu: "0-47"
+            cpu_count: 48
+            ram: 65536
+            labels: [runner-xl]
+          - name: kratos-runner-26
+            cpu: "48-95"
+            cpu_count: 48
+            ram: 65536
+            labels: [runner-xl]
 
     nanoforge:
       ansible_user: "{{ lookup('env', 'NANOFORGE_USER') }}"
@@ -156,3 +168,63 @@ all:
             ram: 2048
 
 
+    linguini:
+      ansible_user: "{{ lookup('env', 'LINGUINI_USER') }}"
+      ansible_host: "{{ lookup('env', 'LINGUINI_IP') }}"
+      force_cleanup: true
+
+      vms:
+        global: # Applied to each instance
+          disk:
+            size: 50G # additional resize apart from base image; qemu-img format
+            folder: "/var/lib/libvirt/images"
+
+          cloud_init_server_dir: /srv/cloud-init
+
+          github_runner:
+            url: "{{ lookup('env', 'GH_URL')}}"
+            token: "{{ lookup('env', 'GH_PAT')}}"
+            download_url: "https://github.com/actions/runner/releases/download/v2.323.0/actions-runner-linux-x64-2.323.0.tar.gz"
+            user: root # WARN: change this if changing VM user
+            labels: [ ubuntu-2204, ubuntu-latest ]
+            group: "default"
+
+          image_url: "https://cloud-images.ubuntu.com/jammy/current/jammy-server-cloudimg-amd64-disk-kvm.img"
+
+        # Individual to each instance
+        instances:
+          - name: linguini-runner-1
+            cpu: "0-3" 
+            cpu_count: 4
+            ram: 4096
+          - name: linguini-runner-2
+            cpu: "8-15"
+            cpu_count: 8
+            ram: 8192
+          - name: linguini-runner-3
+            cpu: "16-23"
+            cpu_count: 8
+            ram: 8192
+          - name: linguini-runner-4
+            cpu: "24-31"
+            cpu_count: 8
+            ram: 8192
+          - name: linguini-runner-5
+            cpu: "32-39"
+            cpu_count: 8
+            ram: 8192
+            labels: [cake-is-a-lie]
+          - name: linguini-runner-6
+            cpu: "40-47"
+            cpu_count: 8
+            ram: 8192
+            labels: [just-another-label]
+          - name: linguini-runner-7
+            cpu: "48-55"
+            cpu_count: 8
+            ram: 8192
+          - name: linguini-runner-8
+            cpu: "56-63"
+            cpu_count: 8
+            ram: 8192
+            labels: [some-label, another-label]

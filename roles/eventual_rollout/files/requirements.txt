@@ -1,1 +1,2 @@
-git+https://github.com/uncleDecart/PyGithub.git@011d03d9c8b57460e6da9fa4580ea08d0728472f
+git+https://github.com/uncleDecart/PyGithub.git@bb51888153685ea404a0dbbd9248d4140fd6703c
+pydantic

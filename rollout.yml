@@ -1,0 +1,9 @@
+- name: Rollout GitHub Runners on x64
+  hosts: linguini
+  become: true
+  vars:
+    arm_runners: false
+  roles:
+    - eventual_rollout
+
+
