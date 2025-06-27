@@ -50,7 +50,6 @@
    --config /tmp/vmm_config.json
    --token {{vms.global.github_runner.token}}
    --org {{vms.global.github_runner.url}}
-   --password pocuser
   register: script_output
 
 - name: Show script output
