@@ -1,0 +1,28 @@
+- name: Create directory for cloud-init files
+  ansible.builtin.file:
+    path: "{{ vms.global.cloud_init_server_dir }}/{{ item.name }}"
+    state: directory
+    mode: '0755'
+    group: kvm
+    owner: libvirt-qemu
+  loop: "{{ vms.instances }}"
+
+- name: Generate install-node-exporter.sh from template
+  ansible.builtin.template:
+    src: "cloud-init/install-node-exporter.sh.j2"
+    dest: "{{ vms.global.cloud_init_server_dir }}/install-node-exporter.sh"
+    mode: '0644'
+
+- name: Base64 encode the script and format it
+  shell: |
+    base64 -w 0 "{{ vms.global.cloud_init_server_dir }}/install-node-exporter.sh"
+  register: encoded_node_script_output
+
+- name: Generate user-data and meta-data for each VM
+  include_tasks: generate-ci-data.yml
+  loop: "{{ vms.instances }}"
+
+- name: Generate ISO image for each VM
+  shell: |
+    genisoimage -output {{ vms.global.cloud_init_server_dir }}/{{ item.name }}-cinit.iso -volid cidata -joliet -rock {{ vms.global.cloud_init_server_dir }}/{{ item.name }}/user-data {{ vms.global.cloud_init_server_dir }}/{{ item.name }}/meta-data
+  loop: "{{ vms.instances }}"

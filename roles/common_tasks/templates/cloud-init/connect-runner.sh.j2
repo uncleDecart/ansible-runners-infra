@@ -1,0 +1,158 @@
+#!/bin/bash
+
+set -e
+
+GITHUB_URL={{ vms.global.github_runner.url }} 
+# WARN: RUNNER_NAME is used in playbook for cleaning up. Be aware when changing
+RUNNER_NAME="$(hostname)"
+RUNNER_URL={{ vms.global.github_runner.download_url }}
+RUNNER_DIR="/opt/actions-runner"
+GITHUB_PAT={{ vms.global.github_runner.token }}
+
+enable_nested_virtualization() {
+    sudo groupadd kvm || true
+    sudo usermod -aG kvm $USER
+    newgrp kvm || true
+
+    arch=$(uname -m)
+
+    if [[ "$arch" == "aarch64" || "$arch" == arm* ]]; then
+      echo "ARM architecture detected: $arch"
+      return 0  # If this is in a sourced script
+    fi
+
+    if [[ "$(grep -E 'vmx|svm' /proc/cpuinfo)" ]]; then
+        echo "Nested virtualization is already enabled."
+    else
+        echo "[*] Enabling nested virtualization..."
+        echo "options kvm_intel nested=1" | sudo tee /etc/modprobe.d/kvm-intel.conf
+        echo "options kvm_amd nested=1" | sudo tee /etc/modprobe.d/kvm-amd.conf
+
+        sudo modprobe -r kvm_intel kvm_amd
+        sudo modprobe kvm_intel kvm_amd
+
+
+        echo "[*] Nested virtualization enabled."
+    fi
+
+}
+
+update_kernel() {
+    echo "[*] Updating kernel to 6.5.0-45-generic..."
+    sudo apt install -y linux-image-6.5.0-45-generic
+    echo "[*] Cleaning up current image..."
+    sudo apt remove -y linux-image-kvm || true
+}
+
+install_docker() {
+    if ! command -v docker &> /dev/null; then
+        echo "[*] Installing Docker..."
+        sudo apt-get install -y ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        echo   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+            $(. /etc/os-release && echo "$VERSION_CODENAME") stable" |   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+        sudo groupadd docker || true
+        sudo usermod -aG docker $USER
+        newgrp docker
+
+        echo "[*] Docker installed successfully."
+    else
+        echo "[*] Docker is already installed."
+    fi
+}
+
+install_swtpm() {
+    echo "[*] Adding swtpm repository..."
+    sudo add-apt-repository -y ppa:stefanberger/swtpm-jammy
+    sudo apt install -y swtpm
+    sudo aa-complain /usr/bin/swtpm
+}
+
+test_emulation() {
+    echo "[*] Testing that arch emulation works..."
+    docker run --rm -it --platform linux/arm64 alpine:3.21 uname -m
+    docker run --rm -it --platform linux/riscv64 alpine:3.21 uname -m
+}
+
+install_github_runner() {
+    if [[ ! -d "$RUNNER_DIR" ]]; then
+        echo "[*] Installing GitHub Actions Runner..."
+        sudo mkdir -p "$RUNNER_DIR"
+        sudo chown $USER:$USER "$RUNNER_DIR"
+        cd "$RUNNER_DIR"
+        curl -o actions-runner-linux.tar.gz -L $RUNNER_URL
+        tar xzf actions-runner-linux.tar.gz
+        rm actions-runner-linux.tar.gz
+        echo "[*] GitHub Actions Runner installed."
+    else
+        echo "[*] GitHub Actions Runner is already installed."
+    fi
+}
+
+fetch_runner_token() {
+    echo "[*] Fetching GitHub Actions Runner registration token..."
+
+    local api_url
+    if [[ "$GITHUB_URL" == */* ]]; then
+        # Repo-level URL (e.g., user/repo)
+        api_url="https://api.github.com/repos/$GITHUB_URL/actions/runners/registration-token"
+    else
+        # Org-level URL (e.g., org)
+        api_url="https://api.github.com/orgs/$GITHUB_URL/actions/runners/registration-token"
+    fi
+
+    GITHUB_RUNNER_TOKEN=$(curl -sSL \
+      -X POST \
+      -H "Accept: application/vnd.github+json" \
+      -H "Authorization: Bearer $GITHUB_PAT" \
+      -H "X-GitHub-Api-Version: 2022-11-28" \
+      "$api_url" | jq -r .token)
+
+    if [[ -z "$GITHUB_RUNNER_TOKEN" || "$GITHUB_RUNNER_TOKEN" == "null" ]]; then
+        echo "[!] Failed to fetch runner token. Exiting."
+        exit 1
+    fi
+
+    echo "[*] Successfully fetched runner token."
+}
+
+register_github_runner() {
+    if [[ ! -f "$RUNNER_DIR/.runner" ]]; then
+        echo "[*] Registering GitHub Actions Runner..."
+        cd "$RUNNER_DIR"
+        ./config.sh --url "https://github.com/$GITHUB_URL" \
+            --token "$GITHUB_RUNNER_TOKEN" \
+            --name "$RUNNER_NAME" \
+            --runnergroup "{{ vms.global.github_runner.group }}" \
+            --work "_work" \
+            --unattended \
+            --labels {{ (vms.global.github_runner.labels + (item.labels | default([]))) | join(',') }} \
+            --replace
+        echo "[*] GitHub Actions Runner registered."
+    else
+        echo "[*] GitHub Actions Runner is already registered."
+    fi
+}
+
+start_runner_service() {
+    cd "$RUNNER_DIR"
+    sudo ./svc.sh install "$USER"
+    sudo ./svc.sh start
+    echo "[*] GitHub Actions Runner is up and running!"
+}
+
+# Execute functions
+update_kernel
+enable_nested_virtualization
+install_docker
+install_swtpm
+install_github_runner
+fetch_runner_token
+register_github_runner
+start_runner_service
+sudo reboot -f

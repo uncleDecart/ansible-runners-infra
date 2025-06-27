@@ -66,8 +66,17 @@
 
 - name: Prune vm.instances to keep only new VMs
   set_fact:
-    vms:
-      instances: "{{ vms.instances | selectattr('name', 'in', new_runners) | list }}"
+    vms: >-
+      {{
+        vms | combine(
+          {
+            'instances': vms.instances
+              | selectattr('name', 'in', new_runners)
+              | list
+          },
+          recursive=True
+        )
+      }}
 
 - name: Create VM disk image for {{ item.name }}
   become: true
@@ -75,8 +84,10 @@
     qemu-img create -f qcow2 -b /var/lib/libvirt/images/ubuntu-base.qcow2 -F qcow2 {{ vms.global.disk.folder}}/{{ item.name }}
   loop: "{{ vms.instances }}"
 
-- name: Set up cloud-init related data
-  ansible.builtin.include_tasks: cloud_init.yml
+- name: Create cloud init 
+  ansible.builtin.include_role:
+    name: common_tasks
+    tasks_from: cloud_init
 
 - name: Create VM with cloud-init for x84_64
   shell: >
