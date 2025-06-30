@@ -95,6 +95,11 @@ specific elements of inventory. Inventory describes machines and holds device sp
                # used for optimisation, leave empty to give VMM
                # control over it
                cpu: "0-7"
+               # labels are optional tags for each specific runner
+               # instance, should be a list even if one element,
+               # they are added in addition to labels specified
+               # in github_runner
+               labels: [cake-is-a-lie]
              # ...
 ```
 
@@ -163,3 +168,9 @@ one should or should not backslash $ symbol. And debugging cloud-init scripts is
 A:
 - For repositories within a personal account: `repo`, `workflow`, `write:actions`
 - For repositories in an organization: `write:actions`, `admin:org` (for organization-wide runners)
+
+#### Q: How can I update production system?
+A: Use rollout playbook. It contains script which will update one machine at a time.
+```sh
+export $(grep -v '^#' .env | xargs) && ansible-playbook -i inventory.yml rollout.yml
+```
