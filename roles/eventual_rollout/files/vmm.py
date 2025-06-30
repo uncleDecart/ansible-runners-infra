@@ -5,6 +5,7 @@ from typing import List, Dict
 from pydantic import BaseModel
 import json
 import os
+import time 
 
 class VmManager(ABC):
     @abstractmethod
@@ -26,6 +27,49 @@ class VMsConfig(BaseModel):
     cloud_init_dir: str
     instances: List[Instance]
 
+def get_vm_state(vm_name):
+    """Return the state of the VM using virsh dominfo."""
+    try:
+        result = subprocess.run(
+            ["virsh", "dominfo", vm_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True
+        )
+        for line in result.stdout.splitlines():
+            if line.startswith("State:"):
+                return line.split(":", 1)[1].strip().lower()
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to get VM state: {e.stderr}")
+        return None
+
+def wait_for_shutdown(vm_name, check_interval=30):
+    """Wait until the VM is shut off."""
+    print(f"Waiting for VM '{vm_name}' to shut off...")
+    while True:
+        state = get_vm_state(vm_name)
+        if state is None:
+            return False
+        if state == "shut off":
+            print(f"VM '{vm_name}' is shut off.")
+            return True
+        print(f"VM '{vm_name}' is still {state}. Checking again in {check_interval} seconds...")
+        time.sleep(check_interval)
+
+def start_vm(vm_name):
+    """Start the VM using virsh start."""
+    try:
+        subprocess.run(
+            ["virsh", "start", vm_name],
+            check=True,
+            text=True
+        )
+        print(f"VM '{vm_name}' has been started.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to start VM: {e.stderr}")
+        return False
 
 class VirshVmManager(VmManager):
     def __init__(self, password: str, config: Path):
@@ -38,6 +82,7 @@ class VirshVmManager(VmManager):
         self.cloud_init_dir = vms_config.cloud_init_dir
         self.disk_folder = vms_config.disk_folder
         self.password = password
+
     
     def deploy(self, vm: str):
         disk_path = os.path.join(self.disk_folder, vm)
@@ -78,6 +123,10 @@ class VirshVmManager(VmManager):
         print(' '.join(cmd))
         subprocess.run(cmd, check=True)
 
+        # Cloud init shuts the VM off once everything is installed and ready to
+        # be used
+        if wait_for_shutdown(vm):
+            start_vm(vm)
 
         print(f"Enabling autostart for {vm}...")
         subprocess.run(["virsh", "autostart", vm], check=True)
