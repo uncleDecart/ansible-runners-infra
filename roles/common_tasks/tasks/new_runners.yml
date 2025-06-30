@@ -1,9 +1,4 @@
 ---
-- name: List all VMs
-  command: virsh list --all --name
-  register: all_vms
-  changed_when: false
-
 - name: Extract GitHub owner and repo from github_url
   set_fact:
     github_owner: "{{ vms.global.github_runner.url.split('/')[0] }}"
@@ -24,11 +19,18 @@
   set_fact:
     current_runner_names: "{{ runners_response.json.runners | map(attribute='name') | list }}"
 
+- name: Show runners_response variable
+  debug:
+    var: current_runner_names
+
+- name: Extract list of instance names from vms.instances
+  set_fact:
+    instance_names: "{{ vms.instances | map(attribute='name') | list }}"
+    
 - name: Determine new VMs that are not registered as GitHub runners
   set_fact:
-    new_runners: "{{ all_vms.stdout_lines | difference(current_runner_names) }}"
+    new_runners: "{{ instance_names | difference(current_runner_names) }}"
 
-- name: Print new VMs
+- name: Show new_runners variable
   debug:
-    msg: "New Runner: {{ item }}"
-  loop: "{{ new_runners }}"
+    var: new_runners

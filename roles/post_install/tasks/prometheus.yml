@@ -85,7 +85,8 @@
         --storage.tsdb.path={{ prometheus_data_dir }} \
         --web.console.templates=/opt/prometheus-{{ prometheus_version }}.linux-amd64/consoles \
         --web.console.libraries=/opt/prometheus-{{ prometheus_version }}.linux-amd64/console_libraries \
-        --storage.tsdb.retention.time=30d
+        --web.listen-address=0.0.0.0:9090 \
+        --storage.tsdb.retention.time=365d
 
       [Install]
       WantedBy=multi-user.target

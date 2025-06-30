@@ -1,0 +1,57 @@
+---
+- name: Ensure python3-venv is installed (Debian/Ubuntu)
+  become: yes
+  apt:
+    name: python3-venv
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Create a Python virtual environment in user's home directory
+  command: python3 -m venv "/home/{{ ansible_user }}/venv"
+  args:
+    creates: "/home/{{ ansible_user }}/venv/bin/activate"
+
+- name: Copy requirements.txt to user's home directory
+  copy:
+    src: requirements.txt
+    dest: "/home/{{ ansible_user }}/requirements.txt"
+    mode: '0644'
+
+- name: Install Python dependencies inside the virtual environment
+  command: "/home/{{ ansible_user }}/venv/bin/pip install -r /home/{{ ansible_user }}/requirements.txt"
+
+- name: Create cloud init 
+  ansible.builtin.include_role:
+    name: common_tasks
+    tasks_from: cloud_init
+
+- name: Template the config file
+  template:
+    src: vmm_config.json.j2
+    dest: /tmp/vmm_config.json
+    mode: '0644'
+
+- name: Copy vmm.py
+  copy:
+    src: vmm.py
+    dest: "/home/{{ ansible_user }}/vmm.py"
+    mode: '0755'
+
+- name: Copy rollout.py
+  copy:
+    src: rollout.py
+    dest: "/home/{{ ansible_user }}/rollout.py"
+    mode: '0755'
+
+- name: Run the python script with parameters inside the virtualenv
+  shell: >
+   /home/{{ ansible_user }}/venv/bin/python /home/{{ ansible_user }}/rollout.py
+   --vms "{{ vms.instances | map(attribute='name') | join(', ') }}"
+   --config /tmp/vmm_config.json
+   --token {{vms.global.github_runner.token}}
+   --org {{vms.global.github_runner.url}}
+  register: script_output
+
+- name: Show script output
+  debug:
+    var: script_output.stdout

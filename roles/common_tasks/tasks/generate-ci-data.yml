@@ -1,0 +1,23 @@
+- name: Generate meta-data for each VM
+  ansible.builtin.template:
+    src: "cloud-init/meta-data.j2"
+    dest: "{{ vms.global.cloud_init_server_dir }}/{{ item.name }}/meta-data"
+    mode: '0644'
+- name: Generate connect-runner.sh from template
+  ansible.builtin.template:
+    src: "cloud-init/connect-runner.sh.j2"
+    dest: "{{ vms.global.cloud_init_server_dir }}/{{item.name}}/connect-runner.sh"
+    mode: '0644'
+- name: Base64 encode the script and format it
+  shell: |
+    base64 -w 0 "{{ vms.global.cloud_init_server_dir }}/{{item.name}}/connect-runner.sh"
+  register: encoded_runner_script_output
+- name: Generate user-data for each VM
+  ansible.builtin.template:
+    src: "cloud-init/user-data.j2"
+    dest: "{{ vms.global.cloud_init_server_dir }}/{{ item.name }}/user-data"
+    mode: '0644'
+  vars:
+    runner_script: "{{ encoded_runner_script_output.stdout }}"
+    node_exporter_script: "{{ encoded_node_script_output.stdout }}"
+
